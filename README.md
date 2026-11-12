@@ -33,6 +33,7 @@ flowchart LR
 | [ESP32_2_Dashboard/](ESP32_2_Dashboard/ESP32_2_Dashboard.ino) | Sketch que consulta Gold y sirve el "centro de mando" web |
 | [dashboards/](dashboards/) | Dashboard AI/BI de Databricks SQL (un archivo por cada nombre de catálogo) |
 | [powerbi/](powerbi/) | Conexión `.pbids`, medidas DAX y tema de colores para Power BI |
+| [docs/MANUAL_CONEXIONES_ESP32.md](docs/MANUAL_CONEXIONES_ESP32.md) | **Manual de conexiones**: materiales, mapa de pines, diagramas de cableado, red, carga de sketches, pruebas y solución de problemas |
 | [LEEME_Guia_de_montaje.md](LEEME_Guia_de_montaje.md) | Guía paso a paso: Databricks, Arduino IDE, cableado y guion de la sustentación |
 | [LEEME_Dashboards.md](LEEME_Dashboards.md) | Cómo importar o construir los tres dashboards |
 
@@ -78,6 +79,10 @@ flowchart LR
 **ESP32 #2 — Dashboard.** Consulta Gold y Bronze cada 30 s y sirve una página web con KPIs, barras, anillo, líneas mensuales, mapa de calor, ranking, filtros, exportación a CSV, transmisión en vivo de los eventos del ESP32 #1 y panel de salud del sistema. Las gráficas se dibujan con `<canvas>` y JavaScript puro, así que el navegador no necesita internet.
 
 Los LEDs de ambas placas funcionan como semáforo: **verde** indica que todo está al día, **amarillo** que hay una comunicación con Databricks en curso y **rojo** que el último envío o consulta falló.
+
+El cableado completo, con diagramas, está en el **[Manual de conexiones](docs/MANUAL_CONEXIONES_ESP32.md)**.
+
+![Conexión de LEDs del ESP32 #1](docs/img/conexion_esp32_1_productor.svg)
 
 ## Seguridad
 

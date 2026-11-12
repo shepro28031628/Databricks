@@ -1,0 +1,109 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 620" width="900" height="620" font-family="Segoe UI,Arial,sans-serif" xmlns:c2pa="http://c2pa.org/manifest">
+<rect width="900" height="620" fill="#ffffff"/>
+<text x="30" y="36" font-size="20" font-weight="700" fill="#0f172a">ESP32 #2 · Dashboard — conexión de LEDs</text>
+<text x="30" y="58" font-size="13" fill="#475569">Vista superior · antena arriba · USB abajo · verifica la serigrafía de tu placa</text>
+<rect x="600" y="80" width="180" height="440" rx="10" fill="#0f3d2e" stroke="#0b2b20"/>
+<rect x="650" y="88" width="80" height="22" rx="3" fill="#94a3b8"/><text x="690.0" y="103" font-size="10" text-anchor="middle" fill="#0f172a">antena</text>
+<rect x="655" y="160" width="70" height="90" rx="4" fill="#cbd5e1"/><text x="690.0" y="200" font-size="11" text-anchor="middle" fill="#0f172a">ESP-WROOM</text><text x="690.0" y="215" font-size="11" text-anchor="middle" fill="#0f172a">-32</text>
+<text x="690.0" y="300" font-size="14" font-weight="700" text-anchor="middle" fill="#e2e8f0">ESP32 #2</text>
+<text x="690.0" y="318" font-size="11" text-anchor="middle" fill="#a7f3d0">DevKit V1 · 30 pines</text>
+<rect x="665" y="505" width="50" height="22" rx="3" fill="#94a3b8"/><text x="690.0" y="520" font-size="10" text-anchor="middle" fill="#0f172a">USB</text>
+<circle cx="662" cy="492" r="7" fill="#e2e8f0"/><text x="662" y="480" font-size="9" text-anchor="middle" fill="#e2e8f0">EN</text>
+<circle cx="718" cy="492" r="7" fill="#e2e8f0"/><text x="718" y="480" font-size="9" text-anchor="middle" fill="#e2e8f0">BOOT</text>
+<circle cx="600" cy="120" r="5" fill="#d4d4d8" stroke="#0b2b20"/>
+<text x="612" y="124" font-size="11" fill="#e2e8f0">EN</text>
+<circle cx="600" cy="146" r="5" fill="#d4d4d8" stroke="#0b2b20"/>
+<text x="612" y="150" font-size="11" fill="#e2e8f0">VP</text>
+<circle cx="600" cy="172" r="5" fill="#d4d4d8" stroke="#0b2b20"/>
+<text x="612" y="176" font-size="11" fill="#e2e8f0">VN</text>
+<circle cx="600" cy="198" r="5" fill="#d4d4d8" stroke="#0b2b20"/>
+<text x="612" y="202" font-size="11" fill="#e2e8f0">D34</text>
+<circle cx="600" cy="224" r="5" fill="#d4d4d8" stroke="#0b2b20"/>
+<text x="612" y="228" font-size="11" fill="#e2e8f0">D35</text>
+<circle cx="600" cy="250" r="5" fill="#d4d4d8" stroke="#0b2b20"/>
+<text x="612" y="254" font-size="11" fill="#e2e8f0">D32</text>
+<circle cx="600" cy="276" r="5" fill="#d4d4d8" stroke="#0b2b20"/>
+<text x="612" y="280" font-size="11" fill="#e2e8f0">D33</text>
+<circle cx="600" cy="302" r="5" fill="#16a34a" stroke="#0b2b20"/>
+<text x="612" y="306" font-size="11" fill="#e2e8f0">D25</text>
+<circle cx="600" cy="328" r="5" fill="#eab308" stroke="#0b2b20"/>
+<text x="612" y="332" font-size="11" fill="#e2e8f0">D26</text>
+<circle cx="600" cy="354" r="5" fill="#dc2626" stroke="#0b2b20"/>
+<text x="612" y="358" font-size="11" fill="#e2e8f0">D27</text>
+<circle cx="600" cy="380" r="5" fill="#d4d4d8" stroke="#0b2b20"/>
+<text x="612" y="384" font-size="11" fill="#e2e8f0">D14</text>
+<circle cx="600" cy="406" r="5" fill="#d4d4d8" stroke="#0b2b20"/>
+<text x="612" y="410" font-size="11" fill="#e2e8f0">D12</text>
+<circle cx="600" cy="432" r="5" fill="#d4d4d8" stroke="#0b2b20"/>
+<text x="612" y="436" font-size="11" fill="#e2e8f0">D13</text>
+<circle cx="600" cy="458" r="5" fill="#1f2937" stroke="#0b2b20"/>
+<text x="612" y="462" font-size="11" fill="#e2e8f0">GND</text>
+<circle cx="600" cy="484" r="5" fill="#d4d4d8" stroke="#0b2b20"/>
+<text x="612" y="488" font-size="11" fill="#e2e8f0">VIN</text>
+<circle cx="780" cy="120" r="5" fill="#d4d4d8" stroke="#0b2b20"/>
+<text x="768" y="124" font-size="11" text-anchor="end" fill="#e2e8f0">D23</text>
+<circle cx="780" cy="146" r="5" fill="#d4d4d8" stroke="#0b2b20"/>
+<text x="768" y="150" font-size="11" text-anchor="end" fill="#e2e8f0">D22</text>
+<circle cx="780" cy="172" r="5" fill="#d4d4d8" stroke="#0b2b20"/>
+<text x="768" y="176" font-size="11" text-anchor="end" fill="#e2e8f0">TX0</text>
+<circle cx="780" cy="198" r="5" fill="#d4d4d8" stroke="#0b2b20"/>
+<text x="768" y="202" font-size="11" text-anchor="end" fill="#e2e8f0">RX0</text>
+<circle cx="780" cy="224" r="5" fill="#d4d4d8" stroke="#0b2b20"/>
+<text x="768" y="228" font-size="11" text-anchor="end" fill="#e2e8f0">D21</text>
+<circle cx="780" cy="250" r="5" fill="#d4d4d8" stroke="#0b2b20"/>
+<text x="768" y="254" font-size="11" text-anchor="end" fill="#e2e8f0">D19</text>
+<circle cx="780" cy="276" r="5" fill="#d4d4d8" stroke="#0b2b20"/>
+<text x="768" y="280" font-size="11" text-anchor="end" fill="#e2e8f0">D18</text>
+<circle cx="780" cy="302" r="5" fill="#d4d4d8" stroke="#0b2b20"/>
+<text x="768" y="306" font-size="11" text-anchor="end" fill="#e2e8f0">D5</text>
+<circle cx="780" cy="328" r="5" fill="#d4d4d8" stroke="#0b2b20"/>
+<text x="768" y="332" font-size="11" text-anchor="end" fill="#e2e8f0">TX2</text>
+<circle cx="780" cy="354" r="5" fill="#d4d4d8" stroke="#0b2b20"/>
+<text x="768" y="358" font-size="11" text-anchor="end" fill="#e2e8f0">RX2</text>
+<circle cx="780" cy="380" r="5" fill="#d4d4d8" stroke="#0b2b20"/>
+<text x="768" y="384" font-size="11" text-anchor="end" fill="#e2e8f0">D4</text>
+<circle cx="780" cy="406" r="5" fill="#d4d4d8" stroke="#0b2b20"/>
+<text x="768" y="410" font-size="11" text-anchor="end" fill="#e2e8f0">D2</text>
+<circle cx="780" cy="432" r="5" fill="#d4d4d8" stroke="#0b2b20"/>
+<text x="768" y="436" font-size="11" text-anchor="end" fill="#e2e8f0">D15</text>
+<circle cx="780" cy="458" r="5" fill="#d4d4d8" stroke="#0b2b20"/>
+<text x="768" y="462" font-size="11" text-anchor="end" fill="#e2e8f0">GND</text>
+<circle cx="780" cy="484" r="5" fill="#d4d4d8" stroke="#0b2b20"/>
+<text x="768" y="488" font-size="11" text-anchor="end" fill="#e2e8f0">3V3</text>
+<polyline fill="none" stroke="#16a34a" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" points="595,302 470,302"/>
+<polyline fill="none" stroke="#334155" stroke-width="2" points="406,302 418,295 426,309 434,295 442,309 450,295 458,309 470,302"/>
+<text x="438" y="288" font-size="12" text-anchor="middle" fill="#334155">220 Ω</text>
+<polyline fill="none" stroke="#16a34a" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" points="406,302 330,302"/>
+<polygon points="330,291 330,313 300,302" fill="#16a34a" stroke="#334155"/>
+<line x1="298" y1="290" x2="298" y2="314" stroke="#334155" stroke-width="3"/>
+<path d="M316,288 l8,-10 M324,288 l8,-10" stroke="#16a34a" stroke-width="2" fill="none"/>
+<text x="336" y="328" font-size="10" fill="#64748b">+ ánodo</text><text x="256" y="328" font-size="10" fill="#64748b">cátodo −</text>
+<text x="313.0" y="276" font-size="13" font-weight="600" text-anchor="middle" fill="#16a34a">LED verde</text>
+<polyline fill="none" stroke="#1f2937" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" points="296,302 150,302"/>
+<circle cx="150" cy="302" r="4" fill="#1f2937"/>
+<polyline fill="none" stroke="#eab308" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" points="595,328 520,328 520,384 470,384"/>
+<polyline fill="none" stroke="#334155" stroke-width="2" points="406,384 418,377 426,391 434,377 442,391 450,377 458,391 470,384"/>
+<text x="438" y="370" font-size="12" text-anchor="middle" fill="#334155">220 Ω</text>
+<polyline fill="none" stroke="#eab308" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" points="406,384 330,384"/>
+<polygon points="330,373 330,395 300,384" fill="#eab308" stroke="#334155"/>
+<line x1="298" y1="372" x2="298" y2="396" stroke="#334155" stroke-width="3"/>
+<path d="M316,370 l8,-10 M324,370 l8,-10" stroke="#eab308" stroke-width="2" fill="none"/>
+<text x="336" y="410" font-size="10" fill="#64748b">+ ánodo</text><text x="256" y="410" font-size="10" fill="#64748b">cátodo −</text>
+<text x="313.0" y="358" font-size="13" font-weight="600" text-anchor="middle" fill="#eab308">LED amarillo</text>
+<polyline fill="none" stroke="#1f2937" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" points="296,384 150,384"/>
+<circle cx="150" cy="384" r="4" fill="#1f2937"/>
+<polyline fill="none" stroke="#dc2626" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" points="595,354 545,354 545,466 470,466"/>
+<polyline fill="none" stroke="#334155" stroke-width="2" points="406,466 418,459 426,473 434,459 442,473 450,459 458,473 470,466"/>
+<text x="438" y="452" font-size="12" text-anchor="middle" fill="#334155">220 Ω</text>
+<polyline fill="none" stroke="#dc2626" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" points="406,466 330,466"/>
+<polygon points="330,455 330,477 300,466" fill="#dc2626" stroke="#334155"/>
+<line x1="298" y1="454" x2="298" y2="478" stroke="#334155" stroke-width="3"/>
+<path d="M316,452 l8,-10 M324,452 l8,-10" stroke="#dc2626" stroke-width="2" fill="none"/>
+<text x="336" y="492" font-size="10" fill="#64748b">+ ánodo</text><text x="256" y="492" font-size="10" fill="#64748b">cátodo −</text>
+<text x="313.0" y="440" font-size="13" font-weight="600" text-anchor="middle" fill="#dc2626">LED rojo</text>
+<polyline fill="none" stroke="#1f2937" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" points="296,466 150,466"/>
+<circle cx="150" cy="466" r="4" fill="#1f2937"/>
+<polyline fill="none" stroke="#1f2937" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" points="150,302 150,570 575,570 575,458 595,458"/>
+<text x="140" y="562" font-size="12" text-anchor="end" fill="#1f2937">GND</text>
+<text x="330" y="588" font-size="12" text-anchor="middle" fill="#1f2937">Línea común de tierra (GND) → pin GND de la placa</text>
+<metadata><c2pa:manifest>AAAWgmp1bWIAAAAeanVtZGMycGEAEQAQgAAAqgA4m3EDYzJwYQAAABZcanVtYgAAAEdqdW1kYzJtYQARABCAAACqADibcQN1cm46YzJwYToyMzAxZWQ5OS1iYjdhLTQ3ZGMtYWQ0ZS1iNTAwOTkwYzA2N2YAAAADl2p1bWIAAAApanVtZGMyYXMAEQAQgAAAqgA4m3EDYzJwYS5hc3NlcnRpb25zAAAAALxqdW1iAAAARGp1bWRjYm9yABEAEIAAAKoAOJtxE2MycGEuaW5ncmVkaWVudC52MwAAAAAYYzJzaDIORag8Rv02OCJsMis7x6oAAABwY2JvcqNpZGM6Zm9ybWF0bWltYWdlL3N2Zyt4bWxqaW5zdGFuY2VJRHgseG1wOmlpZDplZmJjZDMzYi02MTk1LTQxNDUtYTg2My1kYzNlOWZhY2JiNDFscmVsYXRpb25zaGlwaHBhcmVudE9mAAAB4mp1bWIAAABBanVtZGNib3IAEQAQgAAAqgA4m3ETYzJwYS5hY3Rpb25zLnYyAAAAABhjMnNoiiJUvG0BL91KVWKuhgycmgAAAZljYm9yomdhY3Rpb25zgqJmYWN0aW9ua2MycGEub3BlbmVkanBhcmFtZXRlcnOha2luZ3JlZGllbnRzgaJjdXJseC1zZWxmI2p1bWJmPWMycGEuYXNzZXJ0aW9ucy9jMnBhLmluZ3JlZGllbnQudjNkaGFzaFggyFWoC7hBKBpaWSmOGdXNlIIbsUW2f1uhFhrTFXyJ4CSkZmFjdGlvbngdY29tLmFudGhyb3BpYy5jbGF1ZGUucHJvdmlkZWRqcGFyYW1ldGVyc6F4H2NvbS5hbnRocm9waWMub3JpZ2luLWNvbmZpZGVuY2VndW5rbm93bmtkZXNjcmlwdGlvbnhmQ2xhdWRlIHByb3ZpZGVkIHRoaXMgZmlsZSBhdCB0aGUgcmVxdWVzdCBvZiBhIHVzZXIgYW5kIG1heSBoYXZlIGNyZWF0ZWQgb3IgbW9kaWZpZWQgdGhlIGZpbGUgY29udGVudHMubXNvZnR3YXJlQWdlbnShZG5hbWVmQ2xhdWRlcmFsbEFjdGlvbnNJbmNsdWRlZPUAAADIanVtYgAAAEBqdW1kY2JvcgARABCAAACqADibcRNjMnBhLmhhc2guZGF0YQAAAAAYYzJzaJrWzeHCxu2fyEE+xzs+kc0AAACAY2JvcqVjYWxnZnNoYTI1NmNwYWRMAAAAAAAAAAAAAAAAZGhhc2hYIIABhACsKD6/VzqDEwjxBI/uNB3CgPRuQs45NStvnVVRZG5hbWVuanVtYmYgbWFuaWZlc3RqZXhjbHVzaW9uc4GiZXN0YXJ0GSWBZmxlbmd0aBkeBAAAAj5qdW1iAAAAJ2p1bWRjMmNsABEAEIAAAKoAOJtxA2MycGEuY2xhaW0udjIAAAACD2Nib3KlY2FsZ2ZzaGEyNTZpc2lnbmF0dXJleE1zZWxmI2p1bWJmPS9jMnBhL3VybjpjMnBhOjIzMDFlZDk5LWJiN2EtNDdkYy1hZDRlLWI1MDA5OTBjMDY3Zi9jMnBhLnNpZ25hdHVyZWppbnN0YW5jZUlEeCx4bXA6aWlkOmUwNjA0NzAxLTFhODYtNDk1Yi1iNGJkLTY1OGE1NzNhZTI1ZHJjcmVhdGVkX2Fzc2VydGlvbnODomN1cmx4LXNlbGYjanVtYmY9YzJwYS5hc3NlcnRpb25zL2MycGEuaW5ncmVkaWVudC52M2RoYXNoWCDIVagLuEEoGlpZKY4Z1c2UghuxRbZ/W6EWGtMVfIngJKJjdXJseCpzZWxmI2p1bWJmPWMycGEuYXNzZXJ0aW9ucy9jMnBhLmFjdGlvbnMudjJkaGFzaFggAife3p8hZCbPlwCa60HxbikgEW0514YZNi+PZrL2N5miY3VybHgpc2VsZiNqdW1iZj1jMnBhLmFzc2VydGlvbnMvYzJwYS5oYXNoLmRhdGFkaGFzaFgg70Z9VMspnQaPysqJKspzVLdOF4rC6bS98sz2jGyvWKF0Y2xhaW1fZ2VuZXJhdG9yX2luZm+jZG5hbWVvQW50aHJvcGljIEZpbGVzZ3ZlcnNpb25lMS4wLjBrc3BlY1ZlcnNpb25lMi40LjAAABA4anVtYgAAAChqdW1kYzJjcwARABCAAACqADibcQNjMnBhLnNpZ25hdHVyZQAAABAIY2JvctKEWQISogEmGCFZAgowggIGMIIBjaADAgECAhRA5aAK7sI50L64g/oGQgU9Z1UTADAKBggqhkjOPQQDAzBJMRcwFQYDVQQKEw5BbnRocm9waWMsIFBCQzEuMCwGA1UEAxMlQW50aHJvcGljIENvbnRlbnQgQ3JlZGVudGlhbHMgUm9vdCBDQTAeFw0yNjA4MDcxODQzNTZaFw0yODA4MDYxOTQzNTZaMEQxFzAVBgNVBAoTDkFudGhyb3BpYywgUEJDMSkwJwYDVQQDEyBBbnRocm9waWMgQ2xhdWRlIENvbnRlbnQgU2lnbmluZzBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABJh6CmvLUBgFFNU0vUKlOVtE6djd17L5SuwX0LemFisBM3dkd/3cyjxFA3Qo5S46fX0/ihY0VZ7mfb9KF703t5OjWDBWMA4GA1UdDwEB/wQEAwIHgDAVBgNVHSUEDjAMBgorBgEEAYPoXgIBMAwGA1UdEwEB/wQCMAAwHwYDVR0jBBgwFoAUzlHiBIFOZFsj+OPEz5o+nMHXXMIwCgYIKoZIzj0EAwMDZwAwZAIwMXMdFJ4BetLLVY7ORuE9noqbbAZOZn/aArXyTwFAZfKrPzxF2vPoJNf1+UCdg1XGAjBwX1zd9WGqYkqmL5SFqw1QySjr1zJfpJM9+1rdDwSPLMOPOjKuiXjoU/pUUeG9RwmhY3BhZFkNngAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAPZYQIzckrGD8DuzqIZNOhkYyHCMbqFHiV+q6UT3z5PPKPPxR2iQ2C2M5sfA7OL5jFPZCE3KLrJq9i3U8NEEms6kQ5c=</c2pa:manifest></metadata></svg>
