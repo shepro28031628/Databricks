@@ -1,0 +1,102 @@
+// =====================================================================
+//  POWER BI · MEDIDAS DAX NIVEL PRO  (Proyecto Lakehouse IoT)
+//  Crear primero la tabla Calendario (Modelado > Nueva tabla) y luego
+//  una tabla vacía "_Medidas" (Inicio > Especificar datos > Cargar) para
+//  guardar todas las medidas en un solo lugar.
+// =====================================================================
+
+// ---------- 1. TABLA CALENDARIO (Modelado > Nueva tabla) ----------
+Calendario =
+ADDCOLUMNS (
+    CALENDAR ( DATE ( 2026, 1, 1 ), DATE ( 2026, 12, 31 ) ),
+    "Año", YEAR ( [Date] ),
+    "MesNum", MONTH ( [Date] ),
+    "Mes", FORMAT ( [Date], "mmm" ),
+    "Año-Mes", FORMAT ( [Date], "yyyy-mm" ),
+    "Trimestre", "T" & QUARTER ( [Date] )
+)
+// Luego: marcar como tabla de fechas (columna Date), ordenar "Mes" por "MesNum"
+// y relacionar Calendario[Date] (1) -> gold_sales_summary[mes] (*).
+
+// ---------- 2. KPIs BASE ----------
+Ingresos Totales = SUM ( gold_sales_summary[ingresos_totales] )
+
+Total Compras = SUM ( gold_sales_summary[total_compras] )
+
+Ticket Promedio = DIVIDE ( [Ingresos Totales], [Total Compras] )
+
+Clientes Unicos = DISTINCTCOUNT ( gold_user_metrics[user_id] )
+
+Gasto Medio por Cliente = AVERAGE ( gold_user_metrics[gasto_total_usuario] )
+
+% Participacion Region =
+DIVIDE ( [Ingresos Totales], CALCULATE ( [Ingresos Totales], ALL ( dim_region ) ) )
+
+% Participacion Categoria =
+DIVIDE ( [Ingresos Totales], CALCULATE ( [Ingresos Totales], ALL ( dim_categoria ) ) )
+
+// ---------- 3. INTELIGENCIA DE TIEMPO (requiere Calendario) ----------
+Ingresos Mes Anterior =
+CALCULATE ( [Ingresos Totales], DATEADD ( Calendario[Date], -1, MONTH ) )
+
+Variacion MoM % =
+DIVIDE ( [Ingresos Totales] - [Ingresos Mes Anterior], [Ingresos Mes Anterior] )
+
+Ingresos Acumulados YTD = TOTALYTD ( [Ingresos Totales], Calendario[Date] )
+
+Promedio Movil 3 Meses =
+AVERAGEX (
+    DATESINPERIOD ( Calendario[Date], MAX ( Calendario[Date] ), -3, MONTH ),
+    [Ingresos Totales]
+)
+
+// ---------- 4. RANKING Y TOP N ----------
+Ranking Region =
+IF ( HASONEVALUE ( dim_region[region] ),
+     RANKX ( ALL ( dim_region[region] ), [Ingresos Totales], , DESC ) )
+
+Ranking Categoria =
+IF ( HASONEVALUE ( dim_categoria[categoria] ),
+     RANKX ( ALL ( dim_categoria[categoria] ), [Ingresos Totales], , DESC ) )
+
+Mejor Region =
+FIRSTNONBLANK ( TOPN ( 1, VALUES ( dim_region[region_nombre] ), [Ingresos Totales] ), 1 )
+
+Mejor Categoria =
+FIRSTNONBLANK ( TOPN ( 1, VALUES ( dim_categoria[categoria] ), [Ingresos Totales] ), 1 )
+
+// ---------- 5. FORMATO CONDICIONAL Y TEXTOS DINÁMICOS ----------
+// Usar en: Formato > Color de fuente > fx > "Valor del campo"
+Color Variacion =
+SWITCH ( TRUE (), [Variacion MoM %] > 0.005, "#16A34A", [Variacion MoM %] < -0.005, "#DC2626", "#64748B" )
+
+Flecha Variacion =
+VAR v = [Variacion MoM %]
+RETURN IF ( ISBLANK ( v ), "",
+       IF ( v > 0, "▲ ", IF ( v < 0, "▼ ", "● " ) ) & FORMAT ( ABS ( v ), "0.0%" ) & " vs mes anterior" )
+
+Titulo Dinamico =
+"Ventas " &
+IF ( ISFILTERED ( dim_region[region_nombre] ), SELECTEDVALUE ( dim_region[region_nombre], "varias regiones" ), "de todas las regiones" ) &
+IF ( ISFILTERED ( dim_categoria[categoria] ), " · " & SELECTEDVALUE ( dim_categoria[categoria], "varias categorías" ), "" )
+
+Insight Automatico =
+"La región líder es " & [Mejor Region] & " y la categoría más vendida es " & [Mejor Categoria] &
+". El ticket promedio es " & FORMAT ( [Ticket Promedio], "$#,0.00" ) & "."
+
+// ---------- 6. PÁGINA IoT (tabla vw_eventos_esp32) ----------
+Eventos ESP32 = COUNTROWS ( vw_eventos_esp32 )
+
+Dispositivos Activos = DISTINCTCOUNT ( vw_eventos_esp32[device_id] )
+
+Ventas IoT =
+CALCULATE ( SUM ( vw_eventos_esp32[total_amount] ), vw_eventos_esp32[event_type] = "purchase" )
+
+% Conversion IoT =
+DIVIDE ( CALCULATE ( [Eventos ESP32], vw_eventos_esp32[event_type] = "purchase" ), [Eventos ESP32] )
+
+Ultimo Evento ESP32 = MAX ( vw_eventos_esp32[ingestion_time] )
+
+Estado Ingesta =
+VAR mins = DATEDIFF ( [Ultimo Evento ESP32], UTCNOW (), MINUTE )
+RETURN SWITCH ( TRUE (), ISBLANK ( mins ), "⚪ Sin datos", mins <= 5, "🟢 En vivo", mins <= 60, "🟡 Inactivo", "🔴 Detenido" )

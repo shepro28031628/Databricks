@@ -1,0 +1,16 @@
+{
+  "version": "0.1",
+  "connections": [
+    {
+      "details": {
+        "protocol": "databricks",
+        "address": {
+          "host": "dbc-2e9d45b0-5357.cloud.databricks.com",
+          "path": "/sql/1.0/warehouses/PEGA_AQUI_EL_ID_DEL_WAREHOUSE"
+        }
+      },
+      "options": {},
+      "mode": "Import"
+    }
+  ]
+}

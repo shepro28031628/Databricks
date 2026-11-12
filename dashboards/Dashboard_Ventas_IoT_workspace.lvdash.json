@@ -1,0 +1,1689 @@
+{
+  "datasets": [
+    {
+      "name": "ds_ventas",
+      "displayName": "Ventas Gold",
+      "queryLines": [
+        "SELECT region, region_nombre, categoria, mes, usuarios_unicos, total_compras, ingresos_totales, ticket_promedio FROM workspace.gold.gold_sales_summary"
+      ]
+    },
+    {
+      "name": "ds_usuarios",
+      "displayName": "Métricas por usuario",
+      "queryLines": [
+        "SELECT user_id, region, total_compras_usuario, gasto_total_usuario, gasto_promedio_usuario, ultima_compra FROM workspace.gold.gold_user_metrics"
+      ]
+    },
+    {
+      "name": "ds_esp32",
+      "displayName": "Eventos IoT (ESP32)",
+      "queryLines": [
+        "SELECT event_id, device_id, event_type, categoria, region, amount, quantity, total_amount,\n",
+        "from_utc_timestamp(ingestion_time, 'America/Bogota') AS hora_bogota\n",
+        "FROM workspace.gold.vw_eventos_esp32"
+      ]
+    },
+    {
+      "name": "ds_esp32_minuto",
+      "displayName": "Ritmo IoT por minuto",
+      "queryLines": [
+        "SELECT date_trunc('minute', from_utc_timestamp(ingestion_time, 'America/Bogota')) AS minuto, region, categoria, COUNT(*) AS eventos\n",
+        "FROM workspace.gold.vw_eventos_esp32\n",
+        "WHERE ingestion_time >= current_timestamp() - INTERVAL 2 HOURS\nGROUP BY ALL"
+      ]
+    },
+    {
+      "name": "ds_capas",
+      "displayName": "Filas por capa Medallón",
+      "queryLines": [
+        "SELECT '1. Bronze' AS capa, COUNT(*) AS filas FROM workspace.bronze.eventos_raw\nUNION ALL\n",
+        "SELECT '2. Silver', COUNT(*) FROM workspace.silver.silver_events\nUNION ALL\n",
+        "SELECT '3. Gold (ventas)', COUNT(*) FROM workspace.gold.gold_sales_summary\nUNION ALL\n",
+        "SELECT '3. Gold (usuarios)', COUNT(*) FROM workspace.gold.gold_user_metrics"
+      ]
+    },
+    {
+      "name": "ds_calidad",
+      "displayName": "Calidad de datos Bronze",
+      "queryLines": [
+        "SELECT COUNT(*) AS filas_bronze, COUNT(*) - COUNT(DISTINCT event_id) AS duplicados,\n",
+        "SUM(CASE WHEN amount <= 0 THEN 1 ELSE 0 END) AS montos_invalidos,\n",
+        "SUM(CASE WHEN category <> UPPER(TRIM(category)) THEN 1 ELSE 0 END) AS categorias_sucias,\n",
+        "SUM(CASE WHEN source = 'ESP32' THEN 1 ELSE 0 END) AS filas_iot\n",
+        "FROM workspace.bronze.eventos_raw"
+      ]
+    },
+    {
+      "name": "ds_origen",
+      "displayName": "Bronze por origen",
+      "queryLines": [
+        "SELECT source AS origen, event_type, COUNT(*) AS filas FROM workspace.bronze.eventos_raw GROUP BY ALL"
+      ]
+    }
+  ],
+  "pages": [
+    {
+      "name": "resumen",
+      "displayName": "1 · Resumen ejecutivo",
+      "layout": [
+        {
+          "widget": {
+            "name": "t1",
+            "multilineTextboxSpec": {
+              "lines": [
+                "# Ventas · Lakehouse Medallón\n",
+                "Capa **Gold** de Databricks · 200.000 eventos históricos (Spark) + eventos en vivo de un **ESP32**. Usa los filtros para explorar por región y categoría."
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 4,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "fr1",
+            "queries": [
+              {
+                "name": "f_fr1_ds_ventas",
+                "query": {
+                  "datasetName": "ds_ventas",
+                  "fields": [
+                    {
+                      "name": "region",
+                      "expression": "`region`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "f_fr1_ds_usuarios",
+                "query": {
+                  "datasetName": "ds_usuarios",
+                  "fields": [
+                    {
+                      "name": "region",
+                      "expression": "`region`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "filter-multi-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "region",
+                    "displayName": "Región",
+                    "queryName": "f_fr1_ds_ventas"
+                  },
+                  {
+                    "fieldName": "region",
+                    "displayName": "Región",
+                    "queryName": "f_fr1_ds_usuarios"
+                  }
+                ]
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Región"
+              }
+            }
+          },
+          "position": {
+            "x": 4,
+            "y": 0,
+            "width": 1,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "fc1",
+            "queries": [
+              {
+                "name": "f_fc1_ds_ventas",
+                "query": {
+                  "datasetName": "ds_ventas",
+                  "fields": [
+                    {
+                      "name": "categoria",
+                      "expression": "`categoria`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "filter-multi-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "categoria",
+                    "displayName": "Categoría",
+                    "queryName": "f_fc1_ds_ventas"
+                  }
+                ]
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Categoría"
+              }
+            }
+          },
+          "position": {
+            "x": 5,
+            "y": 0,
+            "width": 1,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "k_ing",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_ventas",
+                  "fields": [
+                    {
+                      "name": "sum(ingresos_totales)",
+                      "expression": "SUM(`ingresos_totales`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "sum(ingresos_totales)",
+                  "displayName": "Ingresos totales",
+                  "format": {
+                    "type": "number-currency",
+                    "currencyCode": "USD",
+                    "abbreviation": "compact",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 1
+                    }
+                  }
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Ingresos totales"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 2,
+            "width": 2,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "k_ord",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_ventas",
+                  "fields": [
+                    {
+                      "name": "sum(total_compras)",
+                      "expression": "SUM(`total_compras`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "sum(total_compras)",
+                  "displayName": "Órdenes de compra"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Órdenes de compra"
+              }
+            }
+          },
+          "position": {
+            "x": 2,
+            "y": 2,
+            "width": 1,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "k_tic",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_ventas",
+                  "fields": [
+                    {
+                      "name": "ticket",
+                      "expression": "SUM(`ingresos_totales`) / SUM(`total_compras`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "ticket",
+                  "displayName": "Ticket promedio",
+                  "format": {
+                    "type": "number-currency",
+                    "currencyCode": "USD",
+                    "decimalPlaces": {
+                      "type": "exact",
+                      "places": 2
+                    }
+                  }
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Ticket promedio"
+              }
+            }
+          },
+          "position": {
+            "x": 3,
+            "y": 2,
+            "width": 1,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "k_cli",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_usuarios",
+                  "fields": [
+                    {
+                      "name": "countdistinct(user_id)",
+                      "expression": "COUNT(DISTINCT `user_id`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "countdistinct(user_id)",
+                  "displayName": "Clientes únicos"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Clientes únicos"
+              }
+            }
+          },
+          "position": {
+            "x": 4,
+            "y": 2,
+            "width": 1,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "k_gpc",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_usuarios",
+                  "fields": [
+                    {
+                      "name": "avg(gasto_total_usuario)",
+                      "expression": "AVG(`gasto_total_usuario`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "avg(gasto_total_usuario)",
+                  "displayName": "Gasto medio por cliente",
+                  "format": {
+                    "type": "number-currency",
+                    "currencyCode": "USD",
+                    "abbreviation": "compact",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 1
+                    }
+                  }
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Gasto medio por cliente"
+              }
+            }
+          },
+          "position": {
+            "x": 5,
+            "y": 2,
+            "width": 1,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "bar_rc",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_ventas",
+                  "fields": [
+                    {
+                      "name": "region",
+                      "expression": "`region`"
+                    },
+                    {
+                      "name": "categoria",
+                      "expression": "`categoria`"
+                    },
+                    {
+                      "name": "sum(ingresos_totales)",
+                      "expression": "SUM(`ingresos_totales`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "region",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "displayName": "Región"
+                },
+                "y": {
+                  "fieldName": "sum(ingresos_totales)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "Ingresos",
+                  "format": {
+                    "type": "number-currency",
+                    "currencyCode": "USD",
+                    "abbreviation": "compact",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 1
+                    }
+                  }
+                },
+                "color": {
+                  "fieldName": "categoria",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "displayName": "Categoría"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Ingresos por región y categoría"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 5,
+            "width": 4,
+            "height": 7
+          }
+        },
+        {
+          "widget": {
+            "name": "pie_reg",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_ventas",
+                  "fields": [
+                    {
+                      "name": "region",
+                      "expression": "`region`"
+                    },
+                    {
+                      "name": "sum(ingresos_totales)",
+                      "expression": "SUM(`ingresos_totales`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "pie",
+              "encodings": {
+                "angle": {
+                  "fieldName": "sum(ingresos_totales)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "Ingresos",
+                  "format": {
+                    "type": "number-currency",
+                    "currencyCode": "USD",
+                    "abbreviation": "compact",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 1
+                    }
+                  }
+                },
+                "color": {
+                  "fieldName": "region",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "displayName": "Región"
+                },
+                "label": {
+                  "show": true
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Participación por región"
+              }
+            }
+          },
+          "position": {
+            "x": 4,
+            "y": 5,
+            "width": 2,
+            "height": 7
+          }
+        },
+        {
+          "widget": {
+            "name": "line_mes",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_ventas",
+                  "fields": [
+                    {
+                      "name": "monthly(mes)",
+                      "expression": "DATE_TRUNC(\"MONTH\", `mes`)"
+                    },
+                    {
+                      "name": "region",
+                      "expression": "`region`"
+                    },
+                    {
+                      "name": "sum(ingresos_totales)",
+                      "expression": "SUM(`ingresos_totales`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "line",
+              "encodings": {
+                "x": {
+                  "fieldName": "monthly(mes)",
+                  "scale": {
+                    "type": "temporal"
+                  },
+                  "displayName": "Mes"
+                },
+                "y": {
+                  "fieldName": "sum(ingresos_totales)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "Ingresos",
+                  "format": {
+                    "type": "number-currency",
+                    "currencyCode": "USD",
+                    "abbreviation": "compact",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 1
+                    }
+                  }
+                },
+                "color": {
+                  "fieldName": "region",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "displayName": "Región"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Evolución mensual de ventas por región"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 12,
+            "width": 4,
+            "height": 7
+          }
+        },
+        {
+          "widget": {
+            "name": "heat_rc",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_ventas",
+                  "fields": [
+                    {
+                      "name": "region",
+                      "expression": "`region`"
+                    },
+                    {
+                      "name": "categoria",
+                      "expression": "`categoria`"
+                    },
+                    {
+                      "name": "sum(ingresos_totales)",
+                      "expression": "SUM(`ingresos_totales`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "heatmap",
+              "encodings": {
+                "x": {
+                  "fieldName": "categoria",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "displayName": "Categoría"
+                },
+                "y": {
+                  "fieldName": "region",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "displayName": "Región"
+                },
+                "color": {
+                  "fieldName": "sum(ingresos_totales)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "Ingresos",
+                  "format": {
+                    "type": "number-currency",
+                    "currencyCode": "USD",
+                    "abbreviation": "compact",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 1
+                    }
+                  }
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Mapa de calor · región × categoría"
+              }
+            }
+          },
+          "position": {
+            "x": 4,
+            "y": 12,
+            "width": 2,
+            "height": 7
+          }
+        },
+        {
+          "widget": {
+            "name": "bar_tic",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_ventas",
+                  "fields": [
+                    {
+                      "name": "categoria",
+                      "expression": "`categoria`"
+                    },
+                    {
+                      "name": "ticket",
+                      "expression": "SUM(`ingresos_totales`) / SUM(`total_compras`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "ticket",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "Ticket promedio"
+                },
+                "y": {
+                  "fieldName": "categoria",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "displayName": "Categoría"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Ticket promedio por categoría"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 19,
+            "width": 2,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "tab_top",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_usuarios",
+                  "fields": [
+                    {
+                      "name": "user_id",
+                      "expression": "`user_id`"
+                    },
+                    {
+                      "name": "region",
+                      "expression": "`region`"
+                    },
+                    {
+                      "name": "total_compras_usuario",
+                      "expression": "`total_compras_usuario`"
+                    },
+                    {
+                      "name": "gasto_total_usuario",
+                      "expression": "`gasto_total_usuario`"
+                    },
+                    {
+                      "name": "gasto_promedio_usuario",
+                      "expression": "`gasto_promedio_usuario`"
+                    },
+                    {
+                      "name": "ultima_compra",
+                      "expression": "`ultima_compra`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "table",
+              "encodings": {
+                "columns": [
+                  {
+                    "fieldName": "user_id",
+                    "displayName": "Cliente"
+                  },
+                  {
+                    "fieldName": "region",
+                    "displayName": "Región"
+                  },
+                  {
+                    "fieldName": "total_compras_usuario",
+                    "displayName": "Compras"
+                  },
+                  {
+                    "fieldName": "gasto_total_usuario",
+                    "displayName": "Gasto total"
+                  },
+                  {
+                    "fieldName": "gasto_promedio_usuario",
+                    "displayName": "Gasto medio"
+                  },
+                  {
+                    "fieldName": "ultima_compra",
+                    "displayName": "Última compra"
+                  }
+                ]
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Clientes · ordena por Gasto total para ver el top"
+              }
+            }
+          },
+          "position": {
+            "x": 2,
+            "y": 19,
+            "width": 4,
+            "height": 6
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_CANVAS"
+    },
+    {
+      "name": "iot",
+      "displayName": "2 · IoT en vivo (ESP32)",
+      "layout": [
+        {
+          "widget": {
+            "name": "t2",
+            "multilineTextboxSpec": {
+              "lines": [
+                "# Ingesta IoT en tiempo real\n",
+                "El **ESP32 #1** inserta lotes en `bronze.eventos_raw` mediante la API REST de Databricks. Refresca el tablero para ver los nuevos eventos."
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 4,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "fr2",
+            "queries": [
+              {
+                "name": "f_fr2_ds_esp32",
+                "query": {
+                  "datasetName": "ds_esp32",
+                  "fields": [
+                    {
+                      "name": "region",
+                      "expression": "`region`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              },
+              {
+                "name": "f_fr2_ds_esp32_minuto",
+                "query": {
+                  "datasetName": "ds_esp32_minuto",
+                  "fields": [
+                    {
+                      "name": "region",
+                      "expression": "`region`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "filter-multi-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "region",
+                    "displayName": "Región",
+                    "queryName": "f_fr2_ds_esp32"
+                  },
+                  {
+                    "fieldName": "region",
+                    "displayName": "Región",
+                    "queryName": "f_fr2_ds_esp32_minuto"
+                  }
+                ]
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Región"
+              }
+            }
+          },
+          "position": {
+            "x": 4,
+            "y": 0,
+            "width": 1,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "fd2",
+            "queries": [
+              {
+                "name": "f_fd2_ds_esp32",
+                "query": {
+                  "datasetName": "ds_esp32",
+                  "fields": [
+                    {
+                      "name": "device_id",
+                      "expression": "`device_id`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "filter-multi-select",
+              "encodings": {
+                "fields": [
+                  {
+                    "fieldName": "device_id",
+                    "displayName": "Dispositivo",
+                    "queryName": "f_fd2_ds_esp32"
+                  }
+                ]
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Dispositivo"
+              }
+            }
+          },
+          "position": {
+            "x": 5,
+            "y": 0,
+            "width": 1,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "k_ev",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_esp32",
+                  "fields": [
+                    {
+                      "name": "count(event_id)",
+                      "expression": "COUNT(`event_id`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "count(event_id)",
+                  "displayName": "Eventos recibidos"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Eventos recibidos"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 2,
+            "width": 2,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "k_dev",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_esp32",
+                  "fields": [
+                    {
+                      "name": "countdistinct(device_id)",
+                      "expression": "COUNT(DISTINCT `device_id`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "countdistinct(device_id)",
+                  "displayName": "Dispositivos activos"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Dispositivos activos"
+              }
+            }
+          },
+          "position": {
+            "x": 2,
+            "y": 2,
+            "width": 1,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "k_iing",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_esp32",
+                  "fields": [
+                    {
+                      "name": "sum(total_amount)",
+                      "expression": "SUM(CASE WHEN `event_type` = 'purchase' THEN `total_amount` ELSE 0 END)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "sum(total_amount)",
+                  "displayName": "Ventas IoT (compras)",
+                  "format": {
+                    "type": "number-currency",
+                    "currencyCode": "USD",
+                    "abbreviation": "compact",
+                    "decimalPlaces": {
+                      "type": "max",
+                      "places": 1
+                    }
+                  }
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Ventas IoT (compras)"
+              }
+            }
+          },
+          "position": {
+            "x": 3,
+            "y": 2,
+            "width": 2,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "k_conv",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_esp32",
+                  "fields": [
+                    {
+                      "name": "conv",
+                      "expression": "100 * SUM(CASE WHEN `event_type` = 'purchase' THEN 1 ELSE 0 END) / COUNT(*)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "conv",
+                  "displayName": "% eventos que son compra",
+                  "format": {
+                    "type": "number",
+                    "decimalPlaces": {
+                      "type": "exact",
+                      "places": 1
+                    }
+                  }
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "% eventos que son compra"
+              }
+            }
+          },
+          "position": {
+            "x": 5,
+            "y": 2,
+            "width": 1,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "line_min",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_esp32_minuto",
+                  "fields": [
+                    {
+                      "name": "minuto",
+                      "expression": "`minuto`"
+                    },
+                    {
+                      "name": "sum(eventos)",
+                      "expression": "SUM(`eventos`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "line",
+              "encodings": {
+                "x": {
+                  "fieldName": "minuto",
+                  "scale": {
+                    "type": "temporal"
+                  },
+                  "displayName": "Minuto (hora Bogotá)"
+                },
+                "y": {
+                  "fieldName": "sum(eventos)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "Eventos"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Ritmo de llegada · eventos por minuto (últimas 2 h)"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 5,
+            "width": 4,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "bar_tipo",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_esp32",
+                  "fields": [
+                    {
+                      "name": "event_type",
+                      "expression": "`event_type`"
+                    },
+                    {
+                      "name": "count(event_id)",
+                      "expression": "COUNT(`event_id`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "event_type",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "displayName": "Tipo de evento"
+                },
+                "y": {
+                  "fieldName": "count(event_id)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "Eventos"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Eventos IoT por tipo"
+              }
+            }
+          },
+          "position": {
+            "x": 4,
+            "y": 5,
+            "width": 2,
+            "height": 6
+          }
+        },
+        {
+          "widget": {
+            "name": "tab_feed",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_esp32",
+                  "fields": [
+                    {
+                      "name": "hora_bogota",
+                      "expression": "`hora_bogota`"
+                    },
+                    {
+                      "name": "device_id",
+                      "expression": "`device_id`"
+                    },
+                    {
+                      "name": "event_id",
+                      "expression": "`event_id`"
+                    },
+                    {
+                      "name": "event_type",
+                      "expression": "`event_type`"
+                    },
+                    {
+                      "name": "categoria",
+                      "expression": "`categoria`"
+                    },
+                    {
+                      "name": "region",
+                      "expression": "`region`"
+                    },
+                    {
+                      "name": "total_amount",
+                      "expression": "`total_amount`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "table",
+              "encodings": {
+                "columns": [
+                  {
+                    "fieldName": "hora_bogota",
+                    "displayName": "Hora"
+                  },
+                  {
+                    "fieldName": "device_id",
+                    "displayName": "Dispositivo"
+                  },
+                  {
+                    "fieldName": "event_id",
+                    "displayName": "Evento"
+                  },
+                  {
+                    "fieldName": "event_type",
+                    "displayName": "Tipo"
+                  },
+                  {
+                    "fieldName": "categoria",
+                    "displayName": "Categoría"
+                  },
+                  {
+                    "fieldName": "region",
+                    "displayName": "Región"
+                  },
+                  {
+                    "fieldName": "total_amount",
+                    "displayName": "Total"
+                  }
+                ]
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Últimos eventos recibidos (ordenar por Hora)"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 11,
+            "width": 6,
+            "height": 7
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_CANVAS"
+    },
+    {
+      "name": "calidad",
+      "displayName": "3 · Calidad del Lakehouse",
+      "layout": [
+        {
+          "widget": {
+            "name": "t3",
+            "multilineTextboxSpec": {
+              "lines": [
+                "# Arquitectura Medallón · Calidad de datos\n",
+                "Qué llega crudo a **Bronze**, qué limpia **Silver** y qué resume **Gold**. Evidencia de deduplicación, validación de montos y normalización de categorías."
+              ]
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 6,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "k_q0",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_calidad",
+                  "fields": [
+                    {
+                      "name": "sum(filas_bronze)",
+                      "expression": "SUM(`filas_bronze`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "sum(filas_bronze)",
+                  "displayName": "Filas en Bronze"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Filas en Bronze"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 2,
+            "width": 1,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "k_q1",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_calidad",
+                  "fields": [
+                    {
+                      "name": "sum(duplicados)",
+                      "expression": "SUM(`duplicados`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "sum(duplicados)",
+                  "displayName": "Duplicados detectados"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Duplicados detectados"
+              }
+            }
+          },
+          "position": {
+            "x": 1,
+            "y": 2,
+            "width": 1,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "k_q2",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_calidad",
+                  "fields": [
+                    {
+                      "name": "sum(montos_invalidos)",
+                      "expression": "SUM(`montos_invalidos`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "sum(montos_invalidos)",
+                  "displayName": "Montos inválidos (≤ 0)"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Montos inválidos (≤ 0)"
+              }
+            }
+          },
+          "position": {
+            "x": 2,
+            "y": 2,
+            "width": 1,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "k_q3",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_calidad",
+                  "fields": [
+                    {
+                      "name": "sum(categorias_sucias)",
+                      "expression": "SUM(`categorias_sucias`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "sum(categorias_sucias)",
+                  "displayName": "Categorías sin normalizar"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Categorías sin normalizar"
+              }
+            }
+          },
+          "position": {
+            "x": 3,
+            "y": 2,
+            "width": 1,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "k_q4",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_calidad",
+                  "fields": [
+                    {
+                      "name": "sum(filas_iot)",
+                      "expression": "SUM(`filas_iot`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "sum(filas_iot)",
+                  "displayName": "Filas enviadas por IoT"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Filas enviadas por IoT"
+              }
+            }
+          },
+          "position": {
+            "x": 4,
+            "y": 2,
+            "width": 2,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "bar_capas",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_capas",
+                  "fields": [
+                    {
+                      "name": "capa",
+                      "expression": "`capa`"
+                    },
+                    {
+                      "name": "sum(filas)",
+                      "expression": "SUM(`filas`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "capa",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "displayName": "Capa"
+                },
+                "y": {
+                  "fieldName": "sum(filas)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "Filas"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Volumen por capa: Bronze → Silver → Gold"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 5,
+            "width": 3,
+            "height": 7
+          }
+        },
+        {
+          "widget": {
+            "name": "bar_origen",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "datasetName": "ds_origen",
+                  "fields": [
+                    {
+                      "name": "origen",
+                      "expression": "`origen`"
+                    },
+                    {
+                      "name": "event_type",
+                      "expression": "`event_type`"
+                    },
+                    {
+                      "name": "sum(filas)",
+                      "expression": "SUM(`filas`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "origen",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "displayName": "Origen"
+                },
+                "y": {
+                  "fieldName": "sum(filas)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "Filas"
+                },
+                "color": {
+                  "fieldName": "event_type",
+                  "scale": {
+                    "type": "categorical"
+                  },
+                  "displayName": "Tipo de evento"
+                }
+              },
+              "frame": {
+                "showTitle": true,
+                "title": "Bronze por origen y tipo de evento"
+              }
+            }
+          },
+          "position": {
+            "x": 3,
+            "y": 5,
+            "width": 3,
+            "height": 7
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_CANVAS"
+    }
+  ]
+}
