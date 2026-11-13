@@ -1,0 +1,169 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 910" width="1400" height="910" font-family="Segoe UI, Arial, sans-serif">
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#334155"/>
+    </marker>
+    <filter id="s" x="-5%" y="-5%" width="110%" height="115%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.18"/>
+    </filter>
+  </defs>
+
+  <rect width="1400" height="910" fill="#f8fafc"/>
+  <text x="700" y="48" text-anchor="middle" font-size="30" font-weight="700" fill="#0f172a">Lakehouse Medallón con ingesta IoT desde ESP32</text>
+  <text x="700" y="78" text-anchor="middle" font-size="16" fill="#475569">Databricks · Delta Lake · Bronze → Silver → Gold</text>
+
+  <!-- Column headers -->
+  <text x="145" y="128" text-anchor="middle" font-size="14" font-weight="700" fill="#64748b" letter-spacing="2">ORIGEN</text>
+  <text x="675" y="128" text-anchor="middle" font-size="14" font-weight="700" fill="#64748b" letter-spacing="2">DATABRICKS LAKEHOUSE</text>
+  <text x="1240" y="128" text-anchor="middle" font-size="14" font-weight="700" fill="#64748b" letter-spacing="2">CONSUMO</text>
+
+  <!-- Lakehouse container -->
+  <rect x="285" y="140" width="780" height="400" rx="16" fill="#eef2ff" stroke="#c7d2fe" stroke-width="2" stroke-dasharray="6 4"/>
+
+  <!-- Sources -->
+  <g filter="url(#s)">
+    <rect x="40" y="190" width="210" height="120" rx="12" fill="#fff" stroke="#f97316" stroke-width="3"/>
+    <text x="145" y="226" text-anchor="middle" font-size="19" font-weight="700" fill="#0f172a">Spark</text>
+    <text x="145" y="254" text-anchor="middle" font-size="14" fill="#475569">200.000 eventos</text>
+    <text x="145" y="275" text-anchor="middle" font-size="14" fill="#475569">sintéticos + datos sucios</text>
+    <text x="145" y="296" text-anchor="middle" font-size="13" fill="#94a3b8">duplicados · montos negativos</text>
+
+    <rect x="40" y="370" width="210" height="140" rx="12" fill="#fff" stroke="#0ea5e9" stroke-width="3"/>
+    <text x="145" y="404" text-anchor="middle" font-size="19" font-weight="700" fill="#0f172a">ESP32 #1</text>
+    <text x="145" y="426" text-anchor="middle" font-size="14" font-weight="600" fill="#0ea5e9">Productor</text>
+    <text x="145" y="452" text-anchor="middle" font-size="14" fill="#475569">20 ventas cada 15 s</text>
+    <text x="145" y="473" text-anchor="middle" font-size="14" fill="#475569">Botón BOOT: pausa</text>
+    <text x="145" y="494" text-anchor="middle" font-size="13" fill="#94a3b8">LEDs: verde · amarillo · rojo</text>
+  </g>
+
+  <!-- Layers -->
+  <g filter="url(#s)">
+    <rect x="320" y="200" width="200" height="290" rx="14" fill="#fff7ed" stroke="#b45309" stroke-width="3"/>
+    <rect x="320" y="200" width="200" height="46" rx="14" fill="#b45309"/>
+    <rect x="320" y="228" width="200" height="18" fill="#b45309"/>
+    <text x="420" y="231" text-anchor="middle" font-size="20" font-weight="700" fill="#fff">BRONZE</text>
+    <text x="420" y="278" text-anchor="middle" font-size="14" font-weight="700" fill="#7c2d12">eventos_raw</text>
+    <text x="420" y="310" text-anchor="middle" font-size="14" fill="#475569">Datos crudos</text>
+    <text x="420" y="334" text-anchor="middle" font-size="14" fill="#475569">tal como llegan</text>
+    <text x="420" y="376" text-anchor="middle" font-size="13" fill="#7c2d12">source = SPARK_SINTETICO</text>
+    <text x="420" y="396" text-anchor="middle" font-size="13" fill="#7c2d12">source = ESP32</text>
+    <text x="420" y="434" text-anchor="middle" font-size="13" fill="#94a3b8">mergeSchema:</text>
+    <text x="420" y="452" text-anchor="middle" font-size="13" fill="#94a3b8">agrega device_id</text>
+
+    <rect x="590" y="200" width="200" height="290" rx="14" fill="#f1f5f9" stroke="#64748b" stroke-width="3"/>
+    <rect x="590" y="200" width="200" height="46" rx="14" fill="#64748b"/>
+    <rect x="590" y="228" width="200" height="18" fill="#64748b"/>
+    <text x="690" y="231" text-anchor="middle" font-size="20" font-weight="700" fill="#fff">SILVER</text>
+    <text x="690" y="278" text-anchor="middle" font-size="14" font-weight="700" fill="#334155">silver_events</text>
+    <text x="690" y="310" text-anchor="middle" font-size="14" fill="#475569">Datos limpios</text>
+    <text x="690" y="342" text-anchor="middle" font-size="13" fill="#334155">• Normaliza texto</text>
+    <text x="690" y="362" text-anchor="middle" font-size="13" fill="#334155">• Quita montos inválidos</text>
+    <text x="690" y="382" text-anchor="middle" font-size="13" fill="#334155">• Deduplica event_id</text>
+    <text x="690" y="402" text-anchor="middle" font-size="13" fill="#334155">• Solo compras</text>
+    <text x="690" y="422" text-anchor="middle" font-size="13" fill="#334155">• Ventanas + broadcast join</text>
+    <text x="690" y="460" text-anchor="middle" font-size="13" fill="#94a3b8">MERGE INTO incremental</text>
+
+    <rect x="860" y="200" width="200" height="290" rx="14" fill="#fefce8" stroke="#ca8a04" stroke-width="3"/>
+    <rect x="860" y="200" width="200" height="46" rx="14" fill="#ca8a04"/>
+    <rect x="860" y="228" width="200" height="18" fill="#ca8a04"/>
+    <text x="960" y="231" text-anchor="middle" font-size="20" font-weight="700" fill="#fff">GOLD</text>
+    <text x="960" y="278" text-anchor="middle" font-size="14" font-weight="700" fill="#713f12">KPIs de negocio</text>
+    <text x="960" y="310" text-anchor="middle" font-size="13" fill="#334155">gold_sales_summary</text>
+    <text x="960" y="330" text-anchor="middle" font-size="12" fill="#64748b">región · categoría · mes</text>
+    <text x="960" y="360" text-anchor="middle" font-size="13" fill="#334155">gold_user_metrics</text>
+    <text x="960" y="380" text-anchor="middle" font-size="12" fill="#64748b">métricas por usuario</text>
+    <text x="960" y="410" text-anchor="middle" font-size="13" fill="#334155">dim_region · dim_categoria</text>
+    <text x="960" y="430" text-anchor="middle" font-size="13" fill="#334155">vw_eventos_esp32</text>
+    <text x="960" y="468" text-anchor="middle" font-size="13" fill="#94a3b8">Liquid Clustering</text>
+  </g>
+
+  <!-- Consumers -->
+  <g filter="url(#s)">
+    <rect x="1120" y="170" width="240" height="140" rx="12" fill="#fff" stroke="#0ea5e9" stroke-width="3"/>
+    <text x="1240" y="205" text-anchor="middle" font-size="19" font-weight="700" fill="#0f172a">ESP32 #2</text>
+    <text x="1240" y="227" text-anchor="middle" font-size="14" font-weight="600" fill="#0ea5e9">Dashboard físico</text>
+    <text x="1240" y="254" text-anchor="middle" font-size="13" fill="#475569">Consulta Gold cada 30 s</text>
+    <text x="1240" y="274" text-anchor="middle" font-size="13" fill="#475569">y sirve una web en la red</text>
+    <text x="1240" y="296" text-anchor="middle" font-size="12" fill="#94a3b8">dashboard-esp32.local</text>
+
+    <rect x="1120" y="345" width="240" height="100" rx="12" fill="#fff" stroke="#dc2626" stroke-width="3"/>
+    <text x="1240" y="380" text-anchor="middle" font-size="19" font-weight="700" fill="#0f172a">Databricks SQL</text>
+    <text x="1240" y="404" text-anchor="middle" font-size="14" fill="#475569">Dashboard AI/BI</text>
+    <text x="1240" y="426" text-anchor="middle" font-size="12" fill="#94a3b8">.lvdash.json</text>
+
+    <rect x="1120" y="480" width="240" height="100" rx="12" fill="#fff" stroke="#eab308" stroke-width="3"/>
+    <text x="1240" y="515" text-anchor="middle" font-size="19" font-weight="700" fill="#0f172a">Power BI</text>
+    <text x="1240" y="539" text-anchor="middle" font-size="14" fill="#475569">Informe con medidas DAX</text>
+    <text x="1240" y="561" text-anchor="middle" font-size="12" fill="#94a3b8">.pbids · tema de colores</text>
+  </g>
+
+  <!-- Arrows -->
+  <g stroke="#334155" stroke-width="3" fill="none" marker-end="url(#a)">
+    <path d="M250 250 H285 V290 H318"/>
+    <path d="M250 440 H285 V400 H318"/>
+    <path d="M522 345 H588"/>
+    <path d="M792 345 H858"/>
+    <path d="M1062 300 H1090 V240 H1118"/>
+    <path d="M1062 345 H1118" />
+    <path d="M1062 390 H1090 V530 H1118"/>
+  </g>
+
+  <!-- Arrow labels -->
+  <text x="555" y="335" text-anchor="middle" font-size="12" fill="#334155" font-weight="600">limpiar</text>
+  <text x="825" y="335" text-anchor="middle" font-size="12" fill="#334155" font-weight="600">agregar</text>
+  <text x="170" y="545" text-anchor="middle" font-size="12" fill="#0369a1" font-weight="600">HTTPS · SQL Statement API</text>
+  <text x="1090" y="335" text-anchor="middle" font-size="12" fill="#334155" font-weight="600"></text>
+
+  <!-- Automatic refresh banner -->
+  <rect x="320" y="552" width="740" height="44" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="2.5"/>
+  <text x="690" y="572" text-anchor="middle" font-size="14" font-weight="700" fill="#14532d">Notebook 02 · refresco automático (sin intervención)</text>
+  <text x="690" y="589" text-anchor="middle" font-size="12" fill="#166534">detecta lotes nuevos en Bronze cada 10 s → MERGE a Silver → recalcula Gold</text>
+  <g stroke="#16a34a" stroke-width="2.5" fill="none" stroke-dasharray="5 4" marker-end="url(#a)">
+    <path d="M420 552 V496"/>
+    <path d="M690 552 V496"/>
+    <path d="M960 552 V496"/>
+  </g>
+
+  <!-- Governance strip (notebook 03) -->
+  <rect x="40" y="614" width="1320" height="150" rx="14" fill="#faf5ff" stroke="#a855f7" stroke-width="2.5"/>
+  <text x="700" y="642" text-anchor="middle" font-size="15" font-weight="700" fill="#581c87">Gobierno, calidad y auditoría (notebook 03 · esquema gobierno) · supervisa Bronze, Silver y Gold</text>
+  <g font-size="13" text-anchor="middle">
+    <rect x="60" y="658" width="300" height="92" rx="10" fill="#fff" stroke="#c084fc" stroke-width="2"/>
+    <text x="210" y="682" font-weight="700" fill="#0f172a" font-size="14">ISO/IEC 38505 · Gobierno</text>
+    <text x="210" y="704" fill="#475569">Catálogo de datos: propietario,</text>
+    <text x="210" y="722" fill="#475569">custodio, clasificación y finalidad</text>
+    <text x="210" y="740" fill="#94a3b8" font-size="12">comentarios y etiquetas en Unity Catalog</text>
+
+    <rect x="380" y="658" width="300" height="92" rx="10" fill="#fff" stroke="#c084fc" stroke-width="2"/>
+    <text x="530" y="682" font-weight="700" fill="#0f172a" font-size="14">ISO 8000 · Calidad</text>
+    <text x="530" y="704" fill="#475569">15 reglas: completitud, unicidad,</text>
+    <text x="530" y="722" fill="#475569">validez, consistencia, oportunidad</text>
+    <text x="530" y="740" fill="#94a3b8" font-size="12">umbral por capa · histórico dq_resultados</text>
+
+    <rect x="700" y="658" width="300" height="92" rx="10" fill="#fff" stroke="#c084fc" stroke-width="2"/>
+    <text x="850" y="682" font-weight="700" fill="#0f172a" font-size="14">Acceso · RBAC y ABAC</text>
+    <text x="850" y="704" fill="#475569">Vistas gobernadas: filtro por región</text>
+    <text x="850" y="722" fill="#475569">y máscara de user_id según atributos</text>
+    <text x="850" y="740" fill="#94a3b8" font-size="12">GRANT por grupo (mínimo privilegio)</text>
+
+    <rect x="1020" y="658" width="320" height="92" rx="10" fill="#fff" stroke="#c084fc" stroke-width="2"/>
+    <text x="1180" y="682" font-weight="700" fill="#0f172a" font-size="14">Auditoría</text>
+    <text x="1180" y="704" fill="#475569">Historial Delta conservado en tabla</text>
+    <text x="1180" y="722" fill="#475569">+ system.access.audit (plataforma)</text>
+    <text x="1180" y="740" fill="#94a3b8" font-size="12">quién cambió qué y cuándo</text>
+  </g>
+
+  <!-- Delta Lake strip -->
+  <g transform="translate(0,160)">
+  <rect x="40" y="610" width="1320" height="110" rx="14" fill="#fff" stroke="#cbd5e1" stroke-width="2"/>
+  <text x="700" y="640" text-anchor="middle" font-size="15" font-weight="700" fill="#0f172a">Delta Lake y Spark que se demuestran en el notebook</text>
+  <g font-size="13" fill="#334155" text-anchor="middle">
+    <text x="170" y="676">Evaluación perezosa</text><text x="170" y="696" fill="#94a3b8">DAG · explain</text>
+    <text x="390" y="676">Schema enforcement</text><text x="390" y="696" fill="#94a3b8">y evolution</text>
+    <text x="610" y="676">ACID + DESCRIBE HISTORY</text><text x="610" y="696" fill="#94a3b8">auditoría</text>
+    <text x="830" y="676">Time Travel · RESTORE</text><text x="830" y="696" fill="#94a3b8">recuperación ante fallas</text>
+    <text x="1050" y="676">OPTIMIZE · VACUUM</text><text x="1050" y="696" fill="#94a3b8">small files y retención</text>
+    <text x="1270" y="676">MERGE INTO</text><text x="1270" y="696" fill="#94a3b8">ingesta idempotente</text>
+  </g>
+  </g>
+</svg>
