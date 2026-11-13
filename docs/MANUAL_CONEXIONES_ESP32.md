@@ -208,7 +208,7 @@ const char* CATALOG          = "proyecto_nota3";   // o "workspace"
 | :-: | --- | --- |
 | 1 | Encender la placa | **Autodiagnóstico**: verde → amarillo → rojo se encienden en secuencia y luego se apagan |
 | 2 | Esperar la conexión Wi-Fi | El amarillo parpadea. En el Monitor Serie: `Wi-Fi OK. IP: 192.168.x.x` |
-| 3 | ESP32 #1 envía el primer lote | El amarillo se enciende mientras transmite; después, el verde queda fijo. Monitor: `Lote #1 enviado (20 eventos...) -> SUCCEEDED` |
+| 3 | ESP32 #1 envía el primer lote | El amarillo se enciende mientras transmite; después, el verde queda fijo. Monitor: `Ciclo #1 enviado (200 eventos en 4 INSERT...) -> SUCCEEDED` |
 | 4 | Pulsar **BOOT** en el ESP32 #1 | El verde pasa a parpadear (pausa). Al pulsarlo otra vez vuelve a quedar fijo |
 | 5 | ESP32 #2 consulta Gold | El amarillo se enciende durante la consulta; después, el verde queda fijo. Monitor: `Datos actualizados (... bytes ...)` |
 | 6 | Llegan eventos nuevos del ESP32 #1 | El verde del ESP32 #2 da **3 destellos**. Monitor: `Nuevos eventos del ESP32 #1: +20` |

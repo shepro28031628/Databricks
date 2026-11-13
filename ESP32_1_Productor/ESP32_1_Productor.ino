@@ -23,15 +23,16 @@
 #include <ArduinoJson.h>
 
 // ===================== CONFIGURACIÓN (EDITAR) =====================
-const char* WIFI_SSID       = "TU_WIFI";
-const char* WIFI_PASS       = "TU_CLAVE_WIFI";
+const char* WIFI_SSID        = "EDI";
+const char* WIFI_PASS        = "12345678";
 const char* DATABRICKS_HOST = "dbc-2e9d45b0-5357.cloud.databricks.com";  // sin https://
 const char* DATABRICKS_TOKEN = "dapiXXXXXXXXXXXXXXXXXXXXXXXXXXXX";       // token personal (no lo publiques)
-const char* WAREHOUSE_ID    = "XXXXXXXXXXXXXXXX";                         // ID del SQL Warehouse
+const char* WAREHOUSE_ID    = "415fe1a16c83e7ea";                         // ID del SQL Warehouse
 const char* CATALOG         = "proyecto_nota3";                           // o "workspace" (lo indica la celda 00)
 
-const int  EVENTOS_POR_LOTE   = 20;    // filas por INSERT
-const int  INTERVALO_SEG      = 15;    // segundos entre lotes (si no hay potenciómetro)
+const int  EVENTOS_POR_LOTE   = 50;    // filas por INSERT (no subir de ~60: el texto SQL se copia varias veces en la RAM del ESP32)
+const int  LOTES_POR_CICLO    = 4;     // INSERT por ciclo -> 4 x 50 = 200 eventos por ciclo
+const int  INTERVALO_SEG      = 5;     // segundos mínimos entre ciclos (si no hay potenciómetro). Un ciclo tarda ~12 s, así que el envío es casi continuo
 #define    USAR_POTENCIOMETRO   0      // 1 = leer GPIO 34 para ajustar el intervalo
 // ===================================================================
 
@@ -207,22 +208,29 @@ void loop() {
     conectarWiFi();
     if (WiFi.status() != WL_CONNECTED) { digitalWrite(LED_ROJO, HIGH); return; }
 
-    String sql = construirInsert();
     uint32_t t0 = millis();
-    amarillo(true);                       // AMARILLO: transmitiendo a Databricks
-    String estado = ejecutarSQL(sql);
-    amarillo(false);
+    int insertOk = 0;
+    String estado = "";
+    for (int k = 0; k < LOTES_POR_CICLO; k++) {
+      String sql = construirInsert();     // se libera al terminar cada vuelta (cuida la RAM)
+      amarillo(true);                     // AMARILLO: transmitiendo a Databricks
+      estado = ejecutarSQL(sql);
+      amarillo(false);
+      if (!(estado == "SUCCEEDED" || estado == "PENDING" || estado == "RUNNING")) break;
+      insertOk++;
+    }
     uint32_t ms = millis() - t0;
 
-    if (estado == "SUCCEEDED" || estado == "PENDING" || estado == "RUNNING") {
+    if (insertOk == LOTES_POR_CICLO) {
       lotesOk++;
-      Serial.printf("Lote #%lu enviado (%d eventos, total %lu) -> %s en %lu ms\n",
-                    (unsigned long)lotesOk, EVENTOS_POR_LOTE, (unsigned long)contador,
-                    estado.c_str(), (unsigned long)ms);
-      digitalWrite(LED_ROJO, LOW);        // ROJO apagado: último lote OK
+      Serial.printf("Ciclo #%lu enviado (%d eventos en %d INSERT, total %lu) -> %s en %lu ms\n",
+                    (unsigned long)lotesOk, EVENTOS_POR_LOTE * LOTES_POR_CICLO, LOTES_POR_CICLO,
+                    (unsigned long)contador, estado.c_str(), (unsigned long)ms);
+      digitalWrite(LED_ROJO, LOW);        // ROJO apagado: último ciclo OK
     } else {
       lotesError++;
-      Serial.printf("Falló el lote (%s). Errores acumulados: %lu\n", estado.c_str(), (unsigned long)lotesError);
+      Serial.printf("Falló el ciclo (%s) tras %d de %d INSERT. Errores acumulados: %lu\n",
+                    estado.c_str(), insertOk, LOTES_POR_CICLO, (unsigned long)lotesError);
       digitalWrite(LED_ROJO, HIGH);       // ROJO encendido: último lote falló
       parpadear(LED_ROJO, 3, 80);
       digitalWrite(LED_ROJO, HIGH);

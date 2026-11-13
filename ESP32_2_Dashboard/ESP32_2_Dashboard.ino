@@ -27,13 +27,17 @@
 #include <ArduinoJson.h>
 
 // ===================== CONFIGURACIÓN (EDITAR) =====================
-const char* WIFI_SSID        = "TU_WIFI";
-const char* WIFI_PASS        = "TU_CLAVE_WIFI";
+const char* WIFI_SSID        = "EDI";
+const char* WIFI_PASS        = "12345678";
 const char* DATABRICKS_HOST  = "dbc-2e9d45b0-5357.cloud.databricks.com";
 const char* DATABRICKS_TOKEN = "dapiXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
-const char* WAREHOUSE_ID     = "XXXXXXXXXXXXXXXX";
+const char* WAREHOUSE_ID     = "415fe1a16c83e7ea";
 const char* CATALOG          = "proyecto_nota3";   // o "workspace"
-const uint32_t CONSULTA_CADA_SEG = 30;              // cada cuánto consulta Databricks
+// Red propia del ESP32 #2 (punto de acceso): sirve para abrir el dashboard aunque el hotspot aísle a los clientes.
+// Conecta el PC o el celular a esta red y abre http://192.168.4.1
+const char* AP_SSID = "Dashboard-ESP32";
+const char* AP_PASS = "12345678";                   // mínimo 8 caracteres
+const uint32_t CONSULTA_CADA_SEG = 15;              // cada cuánto consulta Databricks (4 consultas ~8 s; no bajar de 10)
 // ===================================================================
 
 const int PIN_LED      = 2;    // LED integrado (espejo del amarillo)
@@ -405,7 +409,7 @@ void setup() {
   autodiagnostico();
   Serial.println("\n=== ESP32 #2 - Dashboard web ===");
 
-  WiFi.mode(WIFI_STA);
+  WiFi.mode(WIFI_AP_STA);   // STA: sale a internet (Databricks) | AP: red propia para ver el dashboard
   WiFi.begin(WIFI_SSID, WIFI_PASS);
   Serial.print("Conectando Wi-Fi");
   while (WiFi.status() != WL_CONNECTED) {
@@ -413,6 +417,14 @@ void setup() {
     Serial.print(".");
   }
   Serial.printf("\nWi-Fi OK. Abre en el navegador: http://%s\n", WiFi.localIP().toString().c_str());
+
+  // Se crea el punto de acceso después de conectar, para que use el mismo canal que la red del hotspot
+  if (WiFi.softAP(AP_SSID, AP_PASS)) {
+    Serial.printf("Red propia '%s' (clave %s). Conéctate a ella y abre: http://%s\n",
+                  AP_SSID, AP_PASS, WiFi.softAPIP().toString().c_str());
+  } else {
+    Serial.println("No se pudo crear la red propia del ESP32 #2.");
+  }
 
   if (MDNS.begin("dashboard-esp32")) {
     MDNS.addService("http", "tcp", 80);

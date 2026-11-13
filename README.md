@@ -84,9 +84,9 @@ Vista completa, con la capa de gobierno y los conceptos de Delta Lake: [docs/img
 
 ## Componentes IoT
 
-**ESP32 #1 — Productor.** Cada 15 s envía un lote de 20 eventos (60 % compras) a `bronze.eventos_raw` mediante la API REST *SQL Statement Execution*. El botón **BOOT** pausa y reanuda el envío. Si conectas un potenciómetro opcional al GPIO 34, puedes ajustar el intervalo entre 5 y 60 s.
+**ESP32 #1 — Productor.** En cada ciclo envía 200 eventos (4 INSERT de 50 filas, unos 43 % compras), casi de forma continua (un ciclo tarda ~12 s) a `bronze.eventos_raw` mediante la API REST *SQL Statement Execution*. El botón **BOOT** pausa y reanuda el envío. Si conectas un potenciómetro opcional al GPIO 34, puedes ajustar el intervalo entre 5 y 60 s.
 
-**ESP32 #2 — Dashboard.** Consulta Gold y Bronze cada 30 s y sirve una página web con KPIs, barras, anillo, líneas mensuales, mapa de calor, ranking, filtros, exportación a CSV, transmisión en vivo de los eventos del ESP32 #1 y panel de salud del sistema. Las gráficas se dibujan con `<canvas>` y JavaScript puro, así que el navegador no necesita internet.
+**ESP32 #2 — Dashboard.** Consulta Gold y Bronze cada 15 s y sirve una página web con KPIs, barras, anillo, líneas mensuales, mapa de calor, ranking, filtros, exportación a CSV, transmisión en vivo de los eventos del ESP32 #1 y panel de salud del sistema. Las gráficas se dibujan con `<canvas>` y JavaScript puro, así que el navegador no necesita internet.
 
 Los LEDs de ambas placas funcionan como semáforo: **verde** indica que todo está al día, **amarillo** que hay una comunicación con Databricks en curso y **rojo** que el último envío o consulta falló.
 

@@ -56,14 +56,15 @@ Ambas placas: el **amarillo parpadea** mientras se conectan al Wi-Fi y, al encen
 Se usan los GPIO 25, 26 y 27 porque no interfieren con el arranque de la placa (evita los GPIO 0, 2, 12 y 15).
 
 ### ESP32 #1 – Productor
-- Envía un lote de 20 eventos cada 15 s (60 % compras) con `source='ESP32'` y su `device_id`.
+- Envía 200 eventos por ciclo (4 INSERT de 50 filas, unos 43 % compras); un ciclo tarda ~12 s, así que el envío es casi continuo con `source='ESP32'` y su `device_id`.
 - **Botón BOOT** = pausa/reanuda (el LED verde pasa a parpadear).
 - Opcional (más electrónica): potenciómetro en **GPIO 34** (extremos a 3V3 y GND) y `USAR_POTENCIOMETRO 1` → el potenciómetro ajusta el intervalo entre 5 y 60 s en vivo.
 
 ### ESP32 #2 – Dashboard
-- Consulta Databricks cada 30 s. El Monitor Serie muestra la IP; abre `http://<IP>` o `http://dashboard-esp32.local` desde el celular o el PC **en la misma red Wi-Fi**.
+- Consulta Databricks cada 15 s. El Monitor Serie muestra la IP; abre `http://<IP>` o `http://dashboard-esp32.local` desde el celular o el PC **en la misma red Wi-Fi**.
 - Muestra: 4 KPIs, barras por región y categoría, líneas mensuales por región, filtros por región/categoría y la tabla con los últimos eventos del ESP32 #1.
 - Las gráficas no necesitan internet en el navegador (están dibujadas con canvas).
+- **Si el hotspot aísla a los clientes** (el PC no alcanza la IP del ESP32 aunque ambos estén conectados): el ESP32 #2 también crea su **propia red Wi-Fi `Dashboard-ESP32`** (clave `12345678`, se cambia en `AP_SSID` / `AP_PASS`). Conecta el PC o el celular a esa red y abre `http://192.168.4.1`. Mientras estés en esa red, el equipo no tendrá internet, pero el dashboard no lo necesita.
 
 ## 3. Guion sugerido para la sustentación
 1. Notebook celdas 0 → 5: generación, **evaluación perezosa** (celdas 1–4 no ejecutan nada, `explain` en la 4) y la acción real en la 5.
