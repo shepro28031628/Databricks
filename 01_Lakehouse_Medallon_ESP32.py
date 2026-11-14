@@ -49,7 +49,7 @@ df_gen = spark.range(1, 200001) \
     .withColumn('amount', round(rand() * 450 + 10, 2)) \
     .withColumn('quantity', expr("CAST(rand() * 5 + 1 AS INT)")) \
     .withColumn('region', expr("element_at(array('NORTE', 'SUR', 'ESTE', 'OESTE', 'CENTRO'), CAST(rand() * 5 + 1 AS INT))")) \
-    .withColumn('event_timestamp', expr("timestampadd(SECOND, CAST(rand() * 86400 AS INT), to_timestamp(date_add('2026-01-01', CAST(rand() * 280 AS INT))))")) \
+    .withColumn('event_timestamp', expr("timestampadd(SECOND, CAST(rand() * 86400 AS INT), to_timestamp(date_add('2026-01-01', CAST(rand() * greatest(datediff(current_date(), DATE'2026-01-01'), 1) AS INT))))")) \
     .drop('id')
 
 # 2. Simular "datos sucios" típicos de una capa Bronze (para que Silver tenga algo que limpiar)

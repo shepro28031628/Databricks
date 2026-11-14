@@ -99,9 +99,13 @@ const char PAGINA[] PROGMEM = R"rawliteral(
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Lakehouse IoT · Centro de mando</title>
 <style>
-:root{--bg:#0b1120;--panel:#111a2e;--panel2:#16213a;--line:#24314f;--tx:#e6ebf5;--mut:#8b9bb8;--acc:#3b82f6;--ok:#22c55e;--warn:#f59e0b;--bad:#ef4444}
-[data-theme=light]{--bg:#f3f6fb;--panel:#fff;--panel2:#f7f9fd;--line:#e1e7f0;--tx:#0f172a;--mut:#64748b}
-*{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,Segoe UI,Arial;background:var(--bg);color:var(--tx);font-size:14px}
+:root{--bg:#070b16;--panel:rgba(255,255,255,.07);--panel2:rgba(255,255,255,.10);--line:rgba(255,255,255,.16);--tx:#f1f5fb;--mut:#a8b6d0;--acc:#4f8df7;--ok:#34d399;--warn:#fbbf24;--bad:#f87171;--blur:blur(18px) saturate(140%);--shadow:0 8px 32px rgba(0,0,0,.35)}
+[data-theme=light]{--bg:#dbe7f5;--panel:rgba(255,255,255,.55);--panel2:rgba(255,255,255,.72);--line:rgba(255,255,255,.85);--tx:#0f172a;--mut:#475569;--shadow:0 8px 32px rgba(31,60,110,.18)}
+*{box-sizing:border-box}html{background:var(--bg)}body{margin:0;min-height:100vh;font-family:Inter,system-ui,Segoe UI,Arial;color:var(--tx);font-size:14px}
+body::before{content:"";position:fixed;inset:0;z-index:-2;background:radial-gradient(60% 50% at 15% 10%,rgba(59,130,246,.55),transparent 70%),radial-gradient(50% 45% at 85% 20%,rgba(168,85,247,.45),transparent 70%),radial-gradient(55% 50% at 70% 90%,rgba(20,184,166,.40),transparent 70%),radial-gradient(45% 40% at 10% 85%,rgba(244,114,182,.30),transparent 70%),var(--bg)}
+body::after{content:"";position:fixed;width:46vmax;height:46vmax;left:-10vmax;top:30vh;z-index:-1;border-radius:50%;background:radial-gradient(circle,rgba(99,102,241,.38),transparent 65%);filter:blur(40px);animation:fl 28s ease-in-out infinite alternate}
+@keyframes fl{to{transform:translate(70vw,-20vh) scale(1.15)}}
+@media(prefers-reduced-motion:reduce){body::after{animation:none}}
 header{display:flex;align-items:center;gap:14px;padding:12px 20px;border-bottom:1px solid var(--line);background:var(--panel);position:sticky;top:0;z-index:5}
 header h1{font-size:17px;margin:0;font-weight:600}header .sub{color:var(--mut);font-size:12px}
 .live{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--ok);background:rgba(34,197,94,.12);padding:4px 10px;border-radius:99px}
@@ -142,6 +146,13 @@ td{padding:7px 6px;border-bottom:1px solid var(--line)}tr.new td{animation:hl 2.
 .err{background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.4);color:var(--bad);border-radius:10px;padding:10px 14px;display:none}
 @media(max-width:640px){header{flex-wrap:wrap;padding:10px 12px}header .sub,#upd{display:none}main{padding:12px}.hm{display:none}.kpi .v{font-size:22px}}
 footer{color:var(--mut);font-size:11px;text-align:center;padding:10px}
+/* Efecto vidrio (glassmorphism): paneles translúcidos con desenfoque sobre el fondo */
+header,.pipe,.card,.chip,.btn,.node,.sys div{backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur)}
+header{box-shadow:0 4px 24px rgba(0,0,0,.25)}
+.pipe,.card{border-radius:16px;box-shadow:var(--shadow),inset 0 1px 0 rgba(255,255,255,.14)}
+[data-theme=dark] .card,[data-theme=dark] .pipe{background:linear-gradient(145deg,rgba(255,255,255,.12),rgba(255,255,255,.04))}
+.sys div,.node{border-radius:12px}
+#tip{background:rgba(15,23,42,.82);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-color:rgba(255,255,255,.18)}
 </style></head><body>
 <header><div><h1>Lakehouse IoT · Centro de mando</h1><div class="sub">ESP32 → Databricks (Bronze · Silver · Gold) → ESP32</div></div>
 <span id="live" class="live off"><i></i><span id="liveTx">CONECTANDO</span></span><div class="sp"></div>
