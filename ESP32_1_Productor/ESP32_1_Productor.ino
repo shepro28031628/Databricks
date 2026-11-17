@@ -5,9 +5,10 @@
   en la tabla Bronze de Databricks usando la API REST "SQL Statement Execution".
 
   Hardware (semáforo de estado, cada LED con resistencia de 220-330 ohm a GND):
-    - LED VERDE    (GPIO 25): fijo = Wi-Fi OK y enviando | parpadea = en pausa | apagado = sin Wi-Fi.
-    - LED AMARILLO (GPIO 26): encendido mientras transmite un lote a Databricks (también parpadea al conectar Wi-Fi).
-    - LED ROJO     (GPIO 27): el último lote falló (se apaga con el siguiente envío exitoso).
+    - LED VERDE    (GPIO 25): destello corto (latido) en espera | parpadea lento = en pausa.
+    - LED AMARILLO (GPIO 26): parpadea al conectar al Wi-Fi.
+    - Mientras ENVÍA los 3 LEDs "corren" verde -> amarillo -> rojo (datos saliendo hacia Databricks).
+    - LED ROJO     (GPIO 27): fijo = el último ciclo falló o no hay Wi-Fi (se apaga con el siguiente envío exitoso).
     - LED integrado (GPIO 2): espejo del amarillo.
     - Al encender: autodiagnóstico (verde -> amarillo -> rojo).
     - Botón BOOT (GPIO 0): pausa / reanuda el envío (para no gastar la cuota de Free Edition).
@@ -23,10 +24,8 @@
 #include <ArduinoJson.h>
 
 // ===================== CONFIGURACIÓN (EDITAR) =====================
-const char* WIFI_SSID        = "EDI";
-const char* WIFI_PASS        = "12345678";
+#include "secrets.h"   // WIFI_SSID, WIFI_PASS y DATABRICKS_TOKEN: copia secrets.h.example a secrets.h y completa tus datos (no se sube a Git)
 const char* DATABRICKS_HOST = "dbc-2e9d45b0-5357.cloud.databricks.com";  // sin https://
-const char* DATABRICKS_TOKEN = "dapiXXXXXXXXXXXXXXXXXXXXXXXXXXXX";       // token personal (no lo publiques)
 const char* WAREHOUSE_ID    = "415fe1a16c83e7ea";                         // ID del SQL Warehouse
 const char* CATALOG         = "proyecto_nota3";                           // o "workspace" (lo indica la celda 00)
 
@@ -54,15 +53,35 @@ bool     enviando = true;
 uint32_t ultimoEnvio = 0;
 uint32_t lotesOk = 0, lotesError = 0;
 
-void amarillo(bool on) {
-  digitalWrite(LED_AMARILLO, on);
-  digitalWrite(PIN_LED, on);
+// ---- Semáforo animado ----
+// Lo maneja una tarea aparte para que los LEDs se muevan aunque el envío a Databricks bloquee el programa principal.
+//   Conectando al Wi-Fi : amarillo parpadea
+//   En espera (todo OK) : destello corto del verde (latido)
+//   Enviando            : los 3 LEDs "corren" verde -> amarillo -> rojo (datos saliendo)
+//   En pausa (BOOT)     : verde parpadea lento
+//   Error               : rojo fijo
+enum EstadoLed : uint8_t { L_CONECTANDO, L_LISTO, L_ENVIANDO, L_PAUSA, L_ERROR };
+volatile EstadoLed estadoLed = L_CONECTANDO;
+
+void ponerLeds(bool verde, bool amarillo, bool rojo) {
+  digitalWrite(LED_VERDE, verde);
+  digitalWrite(LED_AMARILLO, amarillo);
+  digitalWrite(PIN_LED, amarillo);   // LED integrado = espejo del amarillo
+  digitalWrite(LED_ROJO, rojo);
 }
 
-void parpadear(int pin, int veces, int ms) {
-  for (int i = 0; i < veces; i++) {
-    digitalWrite(pin, HIGH); delay(ms);
-    digitalWrite(pin, LOW);  delay(ms);
+void tareaLeds(void* parametro) {
+  uint32_t n = 0;
+  for (;;) {
+    switch (estadoLed) {
+      case L_CONECTANDO: ponerLeds(false, (n / 3) % 2, false); break;
+      case L_LISTO:      ponerLeds(n % 13 < 2, false, false); break;
+      case L_ENVIANDO: { int p = (n / 2) % 3; ponerLeds(p == 0, p == 1, p == 2); break; }
+      case L_PAUSA:      ponerLeds((n / 6) % 2, false, false); break;
+      case L_ERROR:      ponerLeds(false, false, true); break;
+    }
+    n++;
+    vTaskDelay(pdMS_TO_TICKS(80));
   }
 }
 
@@ -73,13 +92,6 @@ void autodiagnostico() {
   for (int i = 0; i < 3; i++) digitalWrite(leds[i], LOW);
 }
 
-// Verde: fijo = enviando, parpadeo 1 Hz = pausa, apagado = sin Wi-Fi (no bloqueante)
-void actualizarVerde() {
-  if (WiFi.status() != WL_CONNECTED) digitalWrite(LED_VERDE, LOW);
-  else if (enviando)                  digitalWrite(LED_VERDE, HIGH);
-  else                                digitalWrite(LED_VERDE, (millis() / 500) % 2);
-}
-
 void conectarWiFi() {
   if (WiFi.status() == WL_CONNECTED) return;
   Serial.printf("Conectando a %s", WIFI_SSID);
@@ -87,13 +99,15 @@ void conectarWiFi() {
   WiFi.begin(WIFI_SSID, WIFI_PASS);
   uint32_t t0 = millis();
   while (WiFi.status() != WL_CONNECTED && millis() - t0 < 20000) {
-    amarillo(true); delay(250); amarillo(false); delay(250);   // amarillo parpadeando = conectando
+    estadoLed = L_CONECTANDO; delay(500);   // amarillo parpadeando = conectando (lo anima la tarea de LEDs)
     Serial.print(".");
   }
   if (WiFi.status() == WL_CONNECTED) {
     Serial.printf("\nWi-Fi OK. IP: %s\n", WiFi.localIP().toString().c_str());
+    estadoLed = enviando ? L_LISTO : L_PAUSA;
   } else {
     Serial.println("\nNo se pudo conectar al Wi-Fi (se reintentará).");
+    estadoLed = L_ERROR;
   }
 }
 
@@ -172,6 +186,7 @@ void setup() {
   pinMode(LED_ROJO, OUTPUT);
   pinMode(PIN_BOTON, INPUT_PULLUP);
   autodiagnostico();
+  xTaskCreatePinnedToCore(tareaLeds, "leds", 3072, NULL, 1, NULL, 0);   // semáforo animado en segundo plano
   randomSeed(esp_random());
 
   uint64_t mac = ESP.getEfuseMac();
@@ -192,6 +207,7 @@ void loop() {
   bool boton = digitalRead(PIN_BOTON);
   if (botonAnterior == HIGH && boton == LOW) {
     enviando = !enviando;
+    estadoLed = enviando ? L_LISTO : L_PAUSA;
     Serial.println(enviando ? ">> Envío REANUDADO" : ">> Envío EN PAUSA");
     delay(250);   // antirrebote
   }
@@ -206,16 +222,15 @@ void loop() {
   if (enviando && millis() - ultimoEnvio >= intervalo) {
     ultimoEnvio = millis();
     conectarWiFi();
-    if (WiFi.status() != WL_CONNECTED) { digitalWrite(LED_ROJO, HIGH); return; }
+    if (WiFi.status() != WL_CONNECTED) { estadoLed = L_ERROR; return; }
 
     uint32_t t0 = millis();
     int insertOk = 0;
     String estado = "";
+    estadoLed = L_ENVIANDO;               // LEDs corriendo: datos saliendo hacia Databricks
     for (int k = 0; k < LOTES_POR_CICLO; k++) {
       String sql = construirInsert();     // se libera al terminar cada vuelta (cuida la RAM)
-      amarillo(true);                     // AMARILLO: transmitiendo a Databricks
       estado = ejecutarSQL(sql);
-      amarillo(false);
       if (!(estado == "SUCCEEDED" || estado == "PENDING" || estado == "RUNNING")) break;
       insertOk++;
     }
@@ -226,16 +241,13 @@ void loop() {
       Serial.printf("Ciclo #%lu enviado (%d eventos en %d INSERT, total %lu) -> %s en %lu ms\n",
                     (unsigned long)lotesOk, EVENTOS_POR_LOTE * LOTES_POR_CICLO, LOTES_POR_CICLO,
                     (unsigned long)contador, estado.c_str(), (unsigned long)ms);
-      digitalWrite(LED_ROJO, LOW);        // ROJO apagado: último ciclo OK
+      estadoLed = L_LISTO;                // latido verde: último ciclo OK
     } else {
       lotesError++;
       Serial.printf("Falló el ciclo (%s) tras %d de %d INSERT. Errores acumulados: %lu\n",
                     estado.c_str(), insertOk, LOTES_POR_CICLO, (unsigned long)lotesError);
-      digitalWrite(LED_ROJO, HIGH);       // ROJO encendido: último lote falló
-      parpadear(LED_ROJO, 3, 80);
-      digitalWrite(LED_ROJO, HIGH);
+      estadoLed = L_ERROR;                // ROJO fijo: el último ciclo falló (se reintenta en el siguiente)
     }
   }
-  actualizarVerde();
   delay(20);
 }

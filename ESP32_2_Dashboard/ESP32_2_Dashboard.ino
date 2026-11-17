@@ -11,9 +11,10 @@
   Las gráficas se dibujan con <canvas> y JavaScript puro: no dependen de internet en el navegador.
 
   Semáforo de estado (cada LED con resistencia de 220-330 ohm a GND):
-    - LED VERDE    (GPIO 25): fijo = datos de Gold al día | 3 destellos = llegaron eventos nuevos del ESP32 #1.
-    - LED AMARILLO (GPIO 26): encendido mientras consulta Databricks (parpadea al conectar Wi-Fi).
-    - LED ROJO     (GPIO 27): la última consulta falló o no hay Wi-Fi.
+    - LED VERDE    (GPIO 25): destello corto (latido) = datos de Gold al día | 3 destellos = llegaron eventos nuevos del ESP32 #1.
+    - LED AMARILLO (GPIO 26): parpadea al conectar al Wi-Fi.
+    - Mientras CONSULTA los 3 LEDs "corren" rojo -> amarillo -> verde (datos entrando desde Databricks).
+    - LED ROJO     (GPIO 27): fijo = la última consulta falló o no hay Wi-Fi.
     - Al encender: autodiagnóstico (verde -> amarillo -> rojo).
 
   Librerías: ArduinoJson (v7). Placa: "ESP32 Dev Module".
@@ -27,10 +28,8 @@
 #include <ArduinoJson.h>
 
 // ===================== CONFIGURACIÓN (EDITAR) =====================
-const char* WIFI_SSID        = "EDI";
-const char* WIFI_PASS        = "12345678";
+#include "secrets.h"   // WIFI_SSID, WIFI_PASS y DATABRICKS_TOKEN: copia secrets.h.example a secrets.h y completa tus datos (no se sube a Git)
 const char* DATABRICKS_HOST  = "dbc-2e9d45b0-5357.cloud.databricks.com";
-const char* DATABRICKS_TOKEN = "dapiXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
 const char* WAREHOUSE_ID     = "415fe1a16c83e7ea";
 const char* CATALOG          = "proyecto_nota3";   // o "workspace"
 // Red propia del ESP32 #2 (punto de acceso): sirve para abrir el dashboard aunque el hotspot aísle a los clientes.
@@ -47,20 +46,49 @@ const int LED_ROJO     = 27;
 WebServer server(80);
 long eventosEspPrevios = -1;   // para detectar cuando el ESP32 #1 envía datos nuevos
 
-void amarillo(bool on) { digitalWrite(LED_AMARILLO, on); digitalWrite(PIN_LED, on); }
+// ---- Semáforo animado ----
+// Lo maneja una tarea aparte para que los LEDs se muevan aunque las consultas a Databricks bloqueen el programa principal.
+//   Conectando al Wi-Fi  : amarillo parpadea
+//   En espera (datos OK) : destello corto del verde (latido)
+//   Consultando          : los 3 LEDs "corren" rojo -> amarillo -> verde (datos entrando; sentido contrario al ESP32 #1)
+//   Llegaron eventos     : el verde destella 3 veces
+//   Error                : rojo fijo
+enum EstadoLed : uint8_t { L_CONECTANDO, L_LISTO, L_RECIBIENDO, L_ERROR };
+volatile EstadoLed estadoLed = L_CONECTANDO;
+volatile uint8_t destellos = 0;
+
+void ponerLeds(bool verde, bool amarillo, bool rojo) {
+  digitalWrite(LED_VERDE, verde);
+  digitalWrite(LED_AMARILLO, amarillo);
+  digitalWrite(PIN_LED, amarillo);   // LED integrado = espejo del amarillo
+  digitalWrite(LED_ROJO, rojo);
+}
+
+void tareaLeds(void* parametro) {
+  uint32_t n = 0;
+  for (;;) {
+    if (destellos > 0) {             // 6 pasos = 3 destellos del verde
+      ponerLeds(destellos % 2 == 0, false, false);
+      destellos = destellos - 1;
+      vTaskDelay(pdMS_TO_TICKS(90));
+      continue;
+    }
+    switch (estadoLed) {
+      case L_CONECTANDO: ponerLeds(false, (n / 3) % 2, false); break;
+      case L_LISTO:      ponerLeds(n % 13 < 2, false, false); break;
+      case L_RECIBIENDO: { int p = 2 - (int)((n / 2) % 3); ponerLeds(p == 0, p == 1, p == 2); break; }
+      case L_ERROR:      ponerLeds(false, false, true); break;
+    }
+    n++;
+    vTaskDelay(pdMS_TO_TICKS(80));
+  }
+}
 
 void autodiagnostico() {
   int leds[] = {LED_VERDE, LED_AMARILLO, LED_ROJO};
   for (int i = 0; i < 3; i++) { digitalWrite(leds[i], HIGH); delay(250); }
   delay(400);
   for (int i = 0; i < 3; i++) digitalWrite(leds[i], LOW);
-}
-
-void destellosVerde() {
-  for (int i = 0; i < 3; i++) {
-    digitalWrite(LED_VERDE, LOW);  delay(90);
-    digitalWrite(LED_VERDE, HIGH); delay(90);
-  }
 }
 
 String   cacheJson = "{\"ok\":false,\"msg\":\"Esperando la primera consulta a Databricks...\"}";
@@ -120,6 +148,24 @@ main{padding:16px 20px;max-width:1400px;margin:auto;display:grid;gap:14px}
 .node b{font-size:13px}.dot{width:9px;height:9px;border-radius:50%;background:var(--mut)}
 .dot.ok{background:var(--ok)}.dot.warn{background:var(--warn)}.dot.bad{background:var(--bad)}
 .arrow{color:var(--mut)}
+/* Flujo animado entre capas (solo CSS/JS en el navegador: no genera consultas ni carga en el ESP32) */
+.node{transition:box-shadow .4s,transform .4s}
+.node.hit{transform:translateY(-2px);box-shadow:0 0 0 1px var(--acc),0 0 18px rgba(79,141,247,.75)}
+.link{position:relative;width:54px;height:4px;margin:0 4px;border-radius:4px;background:rgba(255,255,255,.14)}
+.link::before{content:"";position:absolute;inset:0;border-radius:4px;opacity:0;background:repeating-linear-gradient(90deg,transparent 0 8px,rgba(255,255,255,.6) 8px 12px);background-size:24px 100%;animation:dash 1s linear infinite}
+.flow-on .link::before{opacity:.55}.flow-slow .link::before{opacity:.3;animation-duration:3s}
+@keyframes dash{to{background-position:24px 0}}
+.pkt{position:absolute;top:-3px;left:0;width:10px;height:10px;border-radius:50%;background:var(--acc);box-shadow:0 0 10px var(--acc);opacity:0;animation:go .6s ease-in forwards}
+@keyframes go{0%{opacity:0;transform:translateX(0)}15%{opacity:1}85%{opacity:1}100%{opacity:0;transform:translateX(46px)}}
+.link em{position:absolute;top:-19px;left:50%;transform:translateX(-50%);font-style:normal;font-size:11px;font-weight:700;color:var(--ok);opacity:0;white-space:nowrap}
+.link em.show{animation:plus 1.8s ease-out}
+@keyframes plus{0%{opacity:0;transform:translate(-50%,6px)}15%{opacity:1;transform:translate(-50%,0)}80%{opacity:1}100%{opacity:0;transform:translate(-50%,-6px)}}
+/* Línea "transmitiendo": los puntos se encienden y brillan (funciona por transición, aunque el sistema tenga las animaciones reducidas) */
+.link{transition:background .3s,box-shadow .3s}
+.link.go{background:linear-gradient(90deg,rgba(79,141,247,.45),rgba(139,92,246,.45));box-shadow:0 0 14px rgba(79,141,247,.7)}
+.link.go::before{opacity:1;background:repeating-linear-gradient(90deg,transparent 0 5px,#9cc4ff 5px 10px);background-size:20px 100%;animation-duration:.4s;filter:drop-shadow(0 0 5px #4f8df7)}
+.pkt{width:12px;height:12px;top:-4px;background:#bcd8ff}
+@media(prefers-reduced-motion:reduce){.link::before{animation:none}}
 .filters{display:flex;gap:16px;flex-wrap:wrap;align-items:center}
 .chips{display:flex;gap:6px;flex-wrap:wrap;align-items:center}.chips span{color:var(--mut);font-size:12px;margin-right:4px}
 .chip{border:1px solid var(--line);background:var(--panel);color:var(--tx);border-radius:99px;padding:5px 12px;font-size:12px;cursor:pointer}
@@ -271,10 +317,22 @@ function ranking(cv,d){const{g,w,h}=ctx(cv),L=96,bh=Math.min(30,(h-10)/d.length-
  d.forEach((s,i)=>{const y=6+i*(bh+8),bw=(w-L-70)*s.v/mx;g.fillStyle=css('--mut');g.textAlign='right';g.fillText((i+1)+'. '+s.n,L-8,y+bh/2+4);
   g.fillStyle=s.c;rr(g,L,y,bw,bh,4);g.fillStyle=css('--tx');g.textAlign='left';g.fillText(short(s.v),L+bw+6,y+bh/2+4);hit(cv,L,y,bw,bh,'<b>'+s.n+'</b><br>'+money(s.v))})}
 function age(t){if(!t)return 1e9;const d=new Date(t.replace(' ','T'));return isNaN(d)?1e9:(Date.now()-d)/1000}
-function pipeline(){const a=D.k[5]!=null?+D.k[5]:age(D.k[4]),esp=a<120?'ok':a<900?'warn':'bad',db=D.err?'bad':'ok',fresh=D.edad<120?'ok':'warn';
- const n=[['ESP32 #1','Productor',esp],['Bronze','eventos_raw',esp=='bad'?'warn':'ok'],['Silver','silver_events',db],['Gold','sales · users',db],['ESP32 #2','Este panel',fresh]];
- $('pipe').innerHTML=n.map((x,i)=>'<div class="node"><span class="dot '+x[2]+'"></span><div><b>'+x[0]+'</b><br><span style="color:var(--mut)">'+x[1]+'</span></div></div>'+(i<4?'<span class="arrow">→</span>':'')).join('')+
-  '<div class="sp"></div><span class="sub">Último evento IoT: '+(D.k[4]||'—')+'</span>'}
+let pb=0,prevEsp=null;
+function pipeBuild(){const N=['ESP32 #1','Bronze','Silver','Gold','ESP32 #2'],S=['Productor','eventos_raw','silver_events','sales · users','Este panel'];
+ $('pipe').innerHTML=N.map((n,i)=>'<div class="node" id="n'+i+'"><span class="dot" id="dt'+i+'"></span><div><b>'+n+'</b><br><span style="color:var(--mut)">'+S[i]+'</span></div></div>'+(i<4?'<div class="link" id="l'+i+'"><em id="b'+i+'"></em></div>':'')).join('')+
+  '<div class="sp"></div><span class="sub" id="lastEv"></span>';pb=1}
+// Paquetes que viajan ESP32 #1 -> Bronze -> Silver -> Gold -> ESP32 #2 cuando llegan eventos nuevos
+function burst(n){const k=Math.max(1,Math.min(6,Math.ceil(n/60)));
+ for(let i=0;i<4;i++)setTimeout(()=>{const l=$('l'+i);if(!l)return;l.classList.add('go');setTimeout(()=>l.classList.remove('go'),1300);
+  for(let j=0;j<k;j++){const p=document.createElement('i');p.className='pkt';p.style.animationDelay=(j*120)+'ms';l.appendChild(p);setTimeout(()=>p.remove(),1500)}
+  const t=$('n'+(i+1));if(t){t.classList.add('hit');setTimeout(()=>t.classList.remove('hit'),700)}},i*650);
+ const b=$('b0');if(b){b.textContent='+'+num(n);b.classList.remove('show');void b.offsetWidth;b.classList.add('show')}}
+function pipeline(){if(!pb)pipeBuild();
+ const a=D.k[5]!=null?+D.k[5]:age(D.k[4]),esp=a<120?'ok':a<900?'warn':'bad',db=D.err?'bad':'ok',fresh=D.edad<120?'ok':'warn';
+ [esp,esp=='bad'?'warn':'ok',db,db,fresh].forEach((s,i)=>$('dt'+i).className='dot '+s);
+ $('pipe').className='pipe flow-'+(esp=='ok'&&!D.err?'on':esp=='warn'?'slow':'off');
+ $('lastEv').textContent='Último evento IoT: '+(D.k[4]||'—');
+ const n=+D.k[3]||0;if(prevEsp!==null&&n>prevEsp)burst(n-prevEsp);prevEsp=n}
 function feed(){const rows=(D.e||[]).filter(x=>(!selR.size||selR.has(x[3]))&&(!selC.size||selC.has(x[2])));
  $('feed').innerHTML=rows.map(x=>{const nw=vistos.size&&!vistos.has(x[0]);return'<tr class="'+(nw?'new':'')+'"><td>'+x[6]+'</td><td class="hm">'+(x[7]||'')+'</td><td class="hm">'+x[0]+'</td><td><span class="tag '+x[1]+'">'+x[1]+'</span></td><td>'+x[2]+'</td><td>'+x[3]+'</td><td style="text-align:right">$'+(+x[4]*+x[5]).toFixed(2)+'</td></tr>'}).join('')||'<tr><td colspan=7 style="color:var(--mut)">Esperando eventos del ESP32 #1…</td></tr>';
  (D.e||[]).forEach(x=>vistos.add(x[0]))}
@@ -335,7 +393,7 @@ String consultar(const char* sql, JsonDocument& destino) {
 }
 
 void actualizarDatos() {
-  amarillo(true);                         // AMARILLO: consultando Databricks
+  estadoLed = L_RECIBIENDO;               // LEDs corriendo (rojo -> amarillo -> verde): datos entrando desde Databricks
   JsonDocument kpi, mes, esp, ritmo;
   uint32_t t0 = millis();
   String err = consultar(SQL_KPI, kpi);
@@ -344,12 +402,10 @@ void actualizarDatos() {
   if (err == "") err = consultar(SQL_RITMO, ritmo);
   latenciaMs = millis() - t0;
   if (err == "") consultasOk++; else consultasError++;
-  amarillo(false);
 
   if (err != "") {
     Serial.println("Error consultando Databricks: " + err);
-    digitalWrite(LED_ROJO, HIGH);         // ROJO: consulta fallida
-    digitalWrite(LED_VERDE, LOW);
+    estadoLed = L_ERROR;                  // ROJO fijo: consulta fallida
     if (primeraVez) {
       JsonDocument e;
       e["ok"] = false;
@@ -377,13 +433,12 @@ void actualizarDatos() {
   cacheJson = "";
   serializeJson(out, cacheJson);
   primeraVez = false;
-  digitalWrite(LED_ROJO, LOW);
-  digitalWrite(LED_VERDE, HIGH);          // VERDE: datos al día
+  estadoLed = L_LISTO;                    // latido verde: datos al día
 
   long eventosEsp = String((const char*)(kpi[0][3] | "0")).toInt();
   if (eventosEspPrevios >= 0 && eventosEsp > eventosEspPrevios) {
     Serial.printf("Nuevos eventos del ESP32 #1: +%ld\n", eventosEsp - eventosEspPrevios);
-    destellosVerde();                     // 3 destellos: llegó información del otro ESP32
+    destellos = 6;                        // 3 destellos del verde: llegó información del otro ESP32
   }
   eventosEspPrevios = eventosEsp;
   Serial.printf("Datos actualizados (%u bytes, %u filas mensuales)\n", (unsigned)cacheJson.length(), (unsigned)mes.size());
@@ -418,13 +473,14 @@ void setup() {
   pinMode(LED_AMARILLO, OUTPUT);
   pinMode(LED_ROJO, OUTPUT);
   autodiagnostico();
+  xTaskCreatePinnedToCore(tareaLeds, "leds", 3072, NULL, 1, NULL, 0);   // semáforo animado en segundo plano
   Serial.println("\n=== ESP32 #2 - Dashboard web ===");
 
   WiFi.mode(WIFI_AP_STA);   // STA: sale a internet (Databricks) | AP: red propia para ver el dashboard
   WiFi.begin(WIFI_SSID, WIFI_PASS);
   Serial.print("Conectando Wi-Fi");
   while (WiFi.status() != WL_CONNECTED) {
-    amarillo(true); delay(250); amarillo(false); delay(250);   // conectando
+    estadoLed = L_CONECTANDO; delay(500);   // amarillo parpadeando (lo anima la tarea de LEDs)
     Serial.print(".");
   }
   Serial.printf("\nWi-Fi OK. Abre en el navegador: http://%s\n", WiFi.localIP().toString().c_str());
@@ -455,8 +511,7 @@ void loop() {
   if (millis() - ultimaConsulta >= CONSULTA_CADA_SEG * 1000UL) {
     ultimaConsulta = millis();
     if (WiFi.status() != WL_CONNECTED) {
-      digitalWrite(LED_VERDE, LOW);
-      digitalWrite(LED_ROJO, HIGH);       // ROJO: sin Wi-Fi
+      estadoLed = L_ERROR;                // ROJO fijo: sin Wi-Fi
       WiFi.reconnect();
     }
     else actualizarDatos();

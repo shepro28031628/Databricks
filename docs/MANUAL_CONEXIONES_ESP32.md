@@ -177,18 +177,26 @@ flowchart LR
 4. *(Windows)* Si la placa no aparece como puerto COM, instala el driver **CP210x** o **CH340**, según el chip USB de tu placa.
 
 ### 8.2 Editar la configuración
-En cada sketch, completa el bloque `CONFIGURACIÓN (EDITAR)`:
+Las credenciales (Wi-Fi y token) van en un archivo aparte, **`secrets.h`**, que Git ignora. En **cada** carpeta de sketch:
+
+1. Copia `secrets.h.example` como `secrets.h` (en la misma carpeta; el Arduino IDE lo mostrará como una pestaña del sketch).
+2. Completa tus datos:
 
 ```cpp
-const char* WIFI_SSID        = "TU_WIFI";
+const char* WIFI_SSID        = "TU_WIFI";          // red de 2,4 GHz
 const char* WIFI_PASS        = "TU_CLAVE_WIFI";
+const char* DATABRICKS_TOKEN = "dapi...";          // Settings → Developer → Access tokens
+```
+
+3. En el bloque `CONFIGURACIÓN (EDITAR)` del `.ino` completa lo que **no** es secreto:
+
+```cpp
 const char* DATABRICKS_HOST  = "dbc-xxxxxxxx-xxxx.cloud.databricks.com";
-const char* DATABRICKS_TOKEN = "dapi...";
 const char* WAREHOUSE_ID     = "xxxxxxxxxxxxxxxx";
 const char* CATALOG          = "proyecto_nota3";   // o "workspace"
 ```
 
-> 🔒 **No hagas commit de estos valores.** Edítalos solo en tu copia local. Si ya los subiste por error, **revoca el token** en Databricks y genera uno nuevo.
+> 🔒 `secrets.h` está en `.gitignore`: no se sube a GitHub. Si un token se filtra, **revócalo** en Databricks y genera uno nuevo (solo hay que cambiarlo en `secrets.h`). GitHub bloquea los pushes que contienen tokens de Databricks (*Secret Scanning*).
 
 ### 8.3 Subir el sketch
 1. Conecta la placa por USB y selecciona:
@@ -208,9 +216,9 @@ const char* CATALOG          = "proyecto_nota3";   // o "workspace"
 | :-: | --- | --- |
 | 1 | Encender la placa | **Autodiagnóstico**: verde → amarillo → rojo se encienden en secuencia y luego se apagan |
 | 2 | Esperar la conexión Wi-Fi | El amarillo parpadea. En el Monitor Serie: `Wi-Fi OK. IP: 192.168.x.x` |
-| 3 | ESP32 #1 envía el primer lote | El amarillo se enciende mientras transmite; después, el verde queda fijo. Monitor: `Ciclo #1 enviado (200 eventos en 4 INSERT...) -> SUCCEEDED` |
-| 4 | Pulsar **BOOT** en el ESP32 #1 | El verde pasa a parpadear (pausa). Al pulsarlo otra vez vuelve a quedar fijo |
-| 5 | ESP32 #2 consulta Gold | El amarillo se enciende durante la consulta; después, el verde queda fijo. Monitor: `Datos actualizados (... bytes ...)` |
+| 3 | ESP32 #1 envía el primer ciclo | Los 3 LEDs **corren** (verde → amarillo → rojo) mientras transmite; después, el verde da un destello corto (latido). Monitor: `Ciclo #1 enviado (200 eventos en 4 INSERT...) -> SUCCEEDED` |
+| 4 | Pulsar **BOOT** en el ESP32 #1 | El verde pasa a parpadear lento (pausa, al terminar el ciclo en curso). Al pulsarlo otra vez vuelve el latido |
+| 5 | ESP32 #2 consulta Gold | Los 3 LEDs corren en sentido contrario (rojo → amarillo → verde) durante la consulta; después, latido verde. Monitor: `Datos actualizados (... bytes ...)` |
 | 6 | Llegan eventos nuevos del ESP32 #1 | El verde del ESP32 #2 da **3 destellos**. Monitor: `Nuevos eventos del ESP32 #1: +20` |
 | 7 | Abrir `http://dashboard-esp32.local` o la IP | Aparece el centro de mando con el indicador **EN VIVO** |
 | 8 | Prueba de falla: apagar el hotspot unos segundos | Se enciende el **rojo**; al volver la red se apaga solo |
@@ -221,9 +229,10 @@ const char* CATALOG          = "proyecto_nota3";   // o "workspace"
 
 | LED | ESP32 #1 · Productor | ESP32 #2 · Dashboard |
 | --- | --- | --- |
-| 🟢 **Verde** | **Fijo:** Wi-Fi OK y enviando · **Parpadea:** en pausa (BOOT) · **Apagado:** sin Wi-Fi | **Fijo:** datos de Gold al día · **3 destellos:** llegaron eventos nuevos del ESP32 #1 |
-| 🟡 **Amarillo** | **Fijo:** transmitiendo un lote · **Parpadea:** conectando al Wi-Fi | **Fijo:** consultando Databricks · **Parpadea:** conectando al Wi-Fi |
-| 🔴 **Rojo** | El último lote falló o no hay Wi-Fi | La última consulta falló o no hay Wi-Fi |
+| 🟢 **Verde** | **Destello corto (latido):** en espera, todo bien · **Parpadea lento:** en pausa (BOOT) | **Destello corto (latido):** datos de Gold al día · **3 destellos:** llegaron eventos nuevos del ESP32 #1 |
+| 🟡 **Amarillo** | **Parpadea:** conectando al Wi-Fi | **Parpadea:** conectando al Wi-Fi |
+| 🟢🟡🔴 **Los 3 corren** | Verde → amarillo → rojo mientras **envía** datos a Databricks | Rojo → amarillo → verde mientras **recibe** datos de Databricks |
+| 🔴 **Rojo fijo** | El último ciclo falló o no hay Wi-Fi | La última consulta falló o no hay Wi-Fi |
 | 🔵 Azul integrado | Copia del amarillo | Copia del amarillo |
 | Secuencia 🟢🟡🔴 al encender | Autodiagnóstico: los 3 LEDs y su cableado funcionan | Igual |
 

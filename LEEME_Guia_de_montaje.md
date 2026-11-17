@@ -33,7 +33,7 @@ ESP32 #1 (genera ventas) ──HTTPS──► Bronze ─► Silver ─► Gold �
 1. **Placas:** Archivo → Preferencias → *URLs adicionales*:
    `https://espressif.github.io/arduino-esp32/package_esp32_index.json` → Herramientas → Placa → Gestor de placas → instala **esp32 (Espressif)**.
 2. **Librería:** Gestor de librerías → **ArduinoJson** (Benoit Blanchon, versión 7).
-3. En **cada** sketch edita el bloque `CONFIGURACIÓN`: Wi-Fi, `DATABRICKS_HOST` (ya viene con tu workspace), `DATABRICKS_TOKEN`, `WAREHOUSE_ID` y `CATALOG`.
+3. En **cada** carpeta de sketch copia `secrets.h.example` como `secrets.h` y completa Wi-Fi (`WIFI_SSID`, `WIFI_PASS`) y `DATABRICKS_TOKEN` (ese archivo **no se sube a Git**). Luego, en el bloque `CONFIGURACIÓN` del `.ino`, revisa `DATABRICKS_HOST` (ya viene con tu workspace), `WAREHOUSE_ID` y `CATALOG`.
 4. Placa: **ESP32 Dev Module**. Sube el sketch y abre el Monitor Serie a **115200**.
 
 ### Conexión de los 3 LEDs (igual en los dos ESP32)
@@ -48,16 +48,17 @@ GPIO 27 ──[ 220Ω ]──►|── GND   LED ROJO
 
 | LED | ESP32 #1 (productor) | ESP32 #2 (dashboard) |
 |---|---|---|
-| Verde | Fijo: Wi-Fi OK y enviando · Parpadea: en pausa · Apagado: sin Wi-Fi | Fijo: datos de Gold al día · 3 destellos: llegaron eventos nuevos del ESP32 #1 |
-| Amarillo | Encendido mientras transmite un lote | Encendido mientras consulta Databricks |
-| Rojo | El último lote falló | La última consulta falló o no hay Wi-Fi |
+| Verde | Destello corto (latido) en espera · Parpadea lento: en pausa (BOOT) | Destello corto (latido): datos al día · 3 destellos: llegaron eventos nuevos del ESP32 #1 |
+| Amarillo | Parpadea al conectar al Wi-Fi | Parpadea al conectar al Wi-Fi |
+| Los 3 LEDs "corren" | Verde → amarillo → rojo mientras envía datos a Databricks | Rojo → amarillo → verde mientras recibe datos de Databricks |
+| Rojo | Fijo: el último ciclo falló o no hay Wi-Fi | Fijo: la última consulta falló o no hay Wi-Fi |
 
 Ambas placas: el **amarillo parpadea** mientras se conectan al Wi-Fi y, al encender, hacen un **autodiagnóstico** (verde → amarillo → rojo).
 Se usan los GPIO 25, 26 y 27 porque no interfieren con el arranque de la placa (evita los GPIO 0, 2, 12 y 15).
 
 ### ESP32 #1 – Productor
 - Envía 200 eventos por ciclo (4 INSERT de 50 filas, unos 43 % compras); un ciclo tarda ~12 s, así que el envío es casi continuo con `source='ESP32'` y su `device_id`.
-- **Botón BOOT** = pausa/reanuda (el LED verde pasa a parpadear).
+- **Botón BOOT** = pausa/reanuda (el LED verde pasa a parpadear lento). La pausa se aplica al terminar el ciclo en curso (hasta ~12 s).
 - Opcional (más electrónica): potenciómetro en **GPIO 34** (extremos a 3V3 y GND) y `USAR_POTENCIOMETRO 1` → el potenciómetro ajusta el intervalo entre 5 y 60 s en vivo.
 
 ### ESP32 #2 – Dashboard

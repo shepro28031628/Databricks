@@ -76,7 +76,7 @@ Vista completa, con la capa de gobierno y los conceptos de Delta Lake: [docs/img
 
 1. **Databricks:** importa `01_Lakehouse_Medallon_ESP32.py` y ejecuta las celdas **00 → 6d**. La celda 00 imprime el catálogo activo (`proyecto_nota3` o `workspace`); anótalo.
 2. **Credenciales:** copia el ID del SQL Warehouse (la última parte del *HTTP path*) y genera un token personal en *Settings → Developer → Access tokens*.
-3. **ESP32:** en cada sketch completa el bloque `CONFIGURACIÓN` (`WIFI_SSID`, `WIFI_PASS`, `DATABRICKS_HOST`, `DATABRICKS_TOKEN`, `WAREHOUSE_ID`, `CATALOG`) y súbelo con el Monitor Serie a 115200 baudios.
+3. **ESP32:** en la carpeta de cada sketch copia `secrets.h.example` como `secrets.h` y completa `WIFI_SSID`, `WIFI_PASS` y `DATABRICKS_TOKEN` (ese archivo no se sube a Git). Luego, en el bloque `CONFIGURACIÓN` del `.ino`, completa `DATABRICKS_HOST`, `WAREHOUSE_ID` y `CATALOG`, y súbelo con el Monitor Serie a 115200 baudios.
 4. **Ingesta en vivo (automática):** abre `02_Refresco_Automatico.py` y pulsa **Run all**; déjalo corriendo. Con el ESP32 #1 enviando lotes, el notebook detecta cada versión nueva de Bronze y actualiza Silver y Gold sin intervención. (Alternativa manual: ejecutar las celdas **7 → 14** de `01`; la 9 y la 9b hacen lo mismo una vez.)
    Opcional: ejecuta `03_Gobierno_Calidad_Auditoria.py` para activar el catálogo de datos, las reglas de calidad, las vistas con control de acceso y la auditoría (ver [docs/GOBIERNO_ISO.md](docs/GOBIERNO_ISO.md)).
 5. **Dashboard físico:** abre `http://dashboard-esp32.local` (o la IP que muestra el Monitor Serie) desde un equipo en la misma red.
@@ -88,7 +88,7 @@ Vista completa, con la capa de gobierno y los conceptos de Delta Lake: [docs/img
 
 **ESP32 #2 — Dashboard.** Consulta Gold y Bronze cada 15 s y sirve una página web con KPIs, barras, anillo, líneas mensuales, mapa de calor, ranking, filtros, exportación a CSV, transmisión en vivo de los eventos del ESP32 #1 y panel de salud del sistema. Las gráficas se dibujan con `<canvas>` y JavaScript puro, así que el navegador no necesita internet.
 
-Los LEDs de ambas placas funcionan como semáforo: **verde** indica que todo está al día, **amarillo** que hay una comunicación con Databricks en curso y **rojo** que el último envío o consulta falló.
+Los LEDs de ambas placas están animados: en espera el **verde** da un destello corto (latido); mientras hay comunicación con Databricks los tres LEDs **corren** (verde → amarillo → rojo en el ESP32 #1, que envía; rojo → amarillo → verde en el ESP32 #2, que recibe); el **rojo fijo** indica que el último envío o consulta falló. En la página del dashboard, la barra de flujo hace viajar paquetes de luz entre ESP32 #1, Bronze, Silver, Gold y ESP32 #2 cuando llegan eventos nuevos.
 
 El cableado completo, con diagramas, está en el **[Manual de conexiones](docs/MANUAL_CONEXIONES_ESP32.md)**.
 
@@ -107,7 +107,7 @@ Es una alineación académica con los conceptos de las normas, no una certificac
 
 ## Seguridad
 
-- **No subas tu token de Databricks ni la clave Wi-Fi al repositorio.** Los sketches traen valores de ejemplo (`dapiXXXX...`, `TU_WIFI`); edítalos solo en tu copia local. Si un token se filtra, revócalo de inmediato.
+- **No subas tu token de Databricks ni la clave Wi-Fi al repositorio.** Van en `secrets.h` (una copia de `secrets.h.example` en cada carpeta de sketch), que `.gitignore` excluye. GitHub bloquea los pushes que contienen tokens de Databricks. Si un token se filtra, revócalo de inmediato.
 - Los sketches usan `WiFiClientSecure::setInsecure()`, que no valida el certificado TLS. Es aceptable para un proyecto académico, pero no para producción.
 - Cada lote del ESP32 #1 mantiene encendido el SQL Warehouse. Pausa el envío con **BOOT** cuando no estés haciendo la demostración, para no agotar la cuota de la Free Edition.
 
